@@ -573,9 +573,9 @@ export default function ProblemPage({
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       {/* Navigation Header */}
-      <nav className="flex h-12 flex-shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-4 gap-2">
+      <nav className="relative flex h-12 w-full flex-shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-4">
         {/* LEFT: Previous Button + Breadcrumbs + Problem Details */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-4 z-10">
           {/* Previous Button */}
           <Link
             href={prevHref}
@@ -593,7 +593,7 @@ export default function ProblemPage({
             title={currentStep ? `Step ${currentStep.stepNumber}: ${currentStep.title}` : "Roadmap"}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline font-medium truncate max-w-[140px]">
+            <span className="hidden lg:inline font-medium truncate max-w-[120px]">
               {currentStep ? currentStep.title : "Roadmap"}
             </span>
           </Link>
@@ -605,7 +605,7 @@ export default function ProblemPage({
             <span className="font-mono text-xs text-muted-foreground flex-shrink-0">
               {formatProblemNumber(problemData.number)}
             </span>
-            <span className="text-xs sm:text-sm font-semibold truncate max-w-[140px] sm:max-w-[200px] md:max-w-[280px]">
+            <span className="text-xs sm:text-sm font-semibold truncate max-w-[110px] sm:max-w-[160px] md:max-w-[220px]">
               {problemData.title}
             </span>
             <span
@@ -642,9 +642,9 @@ export default function ProblemPage({
           </div>
         </div>
 
-        {/* CENTER: Learn / Test Mode Toggle */}
-        <div className="flex items-center justify-center flex-shrink-0">
-          <div className="flex items-center gap-1 rounded-xl bg-secondary/80 p-1 border border-border">
+        {/* CENTER: Learn / Test Mode Toggle — Perfectly Centered Relative to Full Viewport/Header Width */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+          <div className="flex items-center gap-1 rounded-xl bg-secondary/80 p-1 border border-border shadow-sm">
             <button
               onClick={() => setMode("learn")}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
@@ -671,7 +671,7 @@ export default function ProblemPage({
         </div>
 
         {/* RIGHT: Next Button */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 z-10 ml-auto pl-4">
           <Link
             href={nextHref}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-2.5 py-1 text-xs font-semibold text-foreground transition-all hover:bg-secondary hover:border-primary/40 active:scale-95"
