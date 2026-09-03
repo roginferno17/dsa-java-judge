@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080c14" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+
+    <!-- Glowing Text Gradient -->
+    <linearGradient id="title-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="35%" stop-color="#818CF8" />
+      <stop offset="70%" stop-color="#C084FC" />
+      <stop offset="100%" stop-color="#F472B6" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <style>
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.15; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(1.1); }
+      }
+      .glowing-orb-1 {
+        animation: pulse-glow 6s ease-in-out infinite;
+        transform-origin: 300px 100px;
+      }
+      .glowing-orb-2 {
+        animation: pulse-glow 8s ease-in-out infinite 2s;
+        transform-origin: 900px 180px;
+      }
+    </style>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="280" rx="16" fill="url(#bg-gradient)" />
+  <rect width="1200" height="280" rx="16" fill="none" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Ambient Glowing Orbs -->
+  <circle cx="300" cy="100" r="160" fill="#3b82f6" filter="url(#glow)" class="glowing-orb-1" />
+  <circle cx="900" cy="180" r="180" fill="#8b5cf6" filter="url(#glow)" class="glowing-orb-2" />
+  <circle cx="600" cy="140" r="140" fill="#ec4899" opacity="0.1" filter="url(#glow)" />
+
+  <!-- Subtle Modern Dot Matrix Grid -->
+  <g opacity="0.12" fill="#94a3b8">
+    <circle cx="80" cy="40" r="1.5"/><circle cx="140" cy="40" r="1.5"/><circle cx="200" cy="40" r="1.5"/><circle cx="260" cy="40" r="1.5"/><circle cx="320" cy="40" r="1.5"/><circle cx="380" cy="40" r="1.5"/><circle cx="440" cy="40" r="1.5"/><circle cx="500" cy="40" r="1.5"/><circle cx="560" cy="40" r="1.5"/><circle cx="620" cy="40" r="1.5"/><circle cx="680" cy="40" r="1.5"/><circle cx="740" cy="40" r="1.5"/><circle cx="800" cy="40" r="1.5"/><circle cx="860" cy="40" r="1.5"/><circle cx="920" cy="40" r="1.5"/><circle cx="980" cy="40" r="1.5"/><circle cx="1040" cy="40" r="1.5"/><circle cx="1100" cy="40" r="1.5"/>
+    <circle cx="80" cy="90" r="1.5"/><circle cx="140" cy="90" r="1.5"/><circle cx="200" cy="90" r="1.5"/><circle cx="260" cy="90" r="1.5"/><circle cx="320" cy="90" r="1.5"/><circle cx="380" cy="90" r="1.5"/><circle cx="440" cy="90" r="1.5"/><circle cx="500" cy="90" r="1.5"/><circle cx="560" cy="90" r="1.5"/><circle cx="620" cy="90" r="1.5"/><circle cx="680" cy="90" r="1.5"/><circle cx="740" cy="90" r="1.5"/><circle cx="800" cy="90" r="1.5"/><circle cx="860" cy="90" r="1.5"/><circle cx="920" cy="90" r="1.5"/><circle cx="980" cy="90" r="1.5"/><circle cx="1040" cy="90" r="1.5"/><circle cx="1100" cy="90" r="1.5"/>
+    <circle cx="80" cy="140" r="1.5"/><circle cx="140" cy="140" r="1.5"/><circle cx="200" cy="140" r="1.5"/><circle cx="260" cy="140" r="1.5"/><circle cx="320" cy="140" r="1.5"/><circle cx="380" cy="140" r="1.5"/><circle cx="440" cy="140" r="1.5"/><circle cx="500" cy="140" r="1.5"/><circle cx="560" cy="140" r="1.5"/><circle cx="620" cy="140" r="1.5"/><circle cx="680" cy="140" r="1.5"/><circle cx="740" cy="140" r="1.5"/><circle cx="800" cy="140" r="1.5"/><circle cx="860" cy="140" r="1.5"/><circle cx="920" cy="140" r="1.5"/><circle cx="980" cy="140" r="1.5"/><circle cx="1040" cy="140" r="1.5"/><circle cx="1100" cy="140" r="1.5"/>
+    <circle cx="80" cy="190" r="1.5"/><circle cx="140" cy="190" r="1.5"/><circle cx="200" cy="190" r="1.5"/><circle cx="260" cy="190" r="1.5"/><circle cx="320" cy="190" r="1.5"/><circle cx="380" cy="190" r="1.5"/><circle cx="440" cy="190" r="1.5"/><circle cx="500" cy="190" r="1.5"/><circle cx="560" cy="190" r="1.5"/><circle cx="620" cy="190" r="1.5"/><circle cx="680" cy="190" r="1.5"/><circle cx="740" cy="190" r="1.5"/><circle cx="800" cy="190" r="1.5"/><circle cx="860" cy="190" r="1.5"/><circle cx="920" cy="190" r="1.5"/><circle cx="980" cy="190" r="1.5"/><circle cx="1040" cy="190" r="1.5"/><circle cx="1100" cy="190" r="1.5"/>
+    <circle cx="80" cy="240" r="1.5"/><circle cx="140" cy="240" r="1.5"/><circle cx="200" cy="240" r="1.5"/><circle cx="260" cy="240" r="1.5"/><circle cx="320" cy="240" r="1.5"/><circle cx="380" cy="240" r="1.5"/><circle cx="440" cy="240" r="1.5"/><circle cx="500" cy="240" r="1.5"/><circle cx="560" cy="240" r="1.5"/><circle cx="620" cy="240" r="1.5"/><circle cx="680" cy="240" r="1.5"/><circle cx="740" cy="240" r="1.5"/><circle cx="800" cy="240" r="1.5"/><circle cx="860" cy="240" r="1.5"/><circle cx="920" cy="240" r="1.5"/><circle cx="980" cy="240" r="1.5"/><circle cx="1040" cy="240" r="1.5"/><circle cx="1100" cy="240" r="1.5"/>
+  </g>
+
+  <!-- Centered Main Brand Title -->
+  <text x="600" y="115" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif" font-size="58" font-weight="900" fill="url(#title-gradient)" letter-spacing="-1">
+    DSA JAVA JUDGE
+  </text>
+
+  <!-- Centered Subtitle -->
+  <text x="600" y="155" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#94a3b8">
+    True LeetCode-Style Method Execution Platform • Striver A2Z DSA Curriculum
+  </text>
+
+  <!-- Centered Feature Badge Chips Row -->
+  <g transform="translate(245, 195)">
+    <!-- Chip 1: 474 Problems -->
+    <g transform="translate(0, 0)">
+      <rect width="130" height="30" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1" opacity="0.9"/>
+      <text x="65" y="19" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="700" fill="#60A5FA">📚 474 Problems</text>
+    </g>
+
+    <!-- Chip 2: Zero Scanner -->
+    <g transform="translate(142, 0)">
+      <rect width="135" height="30" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="1" opacity="0.9"/>
+      <text x="67" y="19" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="700" fill="#A78BFA">⚡ Zero Scanner</text>
+    </g>
+
+    <!-- Chip 3: 100% Offline Sync -->
+    <g transform="translate(289, 0)">
+      <rect width="150" height="30" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1" opacity="0.9"/>
+      <text x="75" y="19" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="700" fill="#34D399">💾 Offline File Sync</text>
+    </g>
+
+    <!-- Chip 4: Java 17/21 -->
+    <g transform="translate(451, 0)">
+      <rect width="120" height="30" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
+      <text x="60" y="19" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="700" fill="#FBBF24">☕ Java 17 / 21</text>
+    </g>
+
+    <!-- Chip 5: 18 Steps -->
+    <g transform="translate(583, 0)">
+      <rect width="125" height="30" rx="8" fill="#1e293b" stroke="#ec4899" stroke-width="1" opacity="0.9"/>
+      <text x="62" y="19" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="700" fill="#F472B6">🗺️ 18 Steps</text>
+    </g>
+  </g>
+</svg>

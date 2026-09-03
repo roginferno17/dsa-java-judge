@@ -1,7 +1,7 @@
 <div align="center">
 
-<!-- Local High-Res Hero Banner with Glowing Java Logo -->
-<img src="public/banner.svg" width="100%" alt="DSA Java Judge Banner" />
+<!-- Local High-Res Hero Banner -->
+<img src="public/hero-banner.svg" width="100%" alt="DSA Java Judge Banner" />
 
 <br/>
 
