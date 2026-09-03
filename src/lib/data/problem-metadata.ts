@@ -410,6 +410,7 @@ export function getProblemMetadata(slug: string): ProblemMetadata {
   return {
     slug,
     title: foundTitle,
+    description: "Given the method signature below, implement the required algorithm and return the computed answer.",
     className: "Solution",
     methodName,
     parameters: [{ name: "nums", type: "int[]" }],

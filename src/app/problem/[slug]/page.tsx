@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, use } from "react"
+import { useState, useCallback, useEffect, use } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ArrowLeft,
@@ -10,6 +10,8 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   Circle,
   XCircle,
@@ -28,7 +30,7 @@ import dynamic from "next/dynamic"
 import { curriculum } from "@/lib/data/curriculum"
 import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
-import { ResizablePanel } from "@/components/ui/resizable-panel"
+import { ResizablePanel, VerticalResizablePanel } from "@/components/ui/resizable-panel"
 import { getProblemMetadata } from "@/lib/data/problem-metadata"
 import { TestResultItem } from "@/lib/types/judge"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
@@ -91,18 +93,29 @@ export default function ProblemPage({
   const [selectedTab, setSelectedTab] = useState<number>(0)
   const { markAttempted, markSolved, toggleSolved, getProblemStatus } = useProgressStore()
 
-  // Find the problem in curriculum for breadcrumbs
+  // Reset editor code and results when navigating between problems
+  useEffect(() => {
+    setCode(metadata.starterCode)
+    setResult(null)
+    setSelectedTab(0)
+  }, [slug, metadata.starterCode])
+
+  // Dynamic hierarchy lookup: Find current step, subtopic, and ordered step problems
+  let currentStep: (typeof curriculum)[0] | null = null
+  let currentTopic: (typeof curriculum)[0]["topics"][0] | null = null
   let problem = null
-  let step = null
+
   for (const s of curriculum) {
     for (const t of s.topics) {
       const p = t.problems.find((pr) => pr.slug === slug)
       if (p) {
         problem = p
-        step = s
+        currentTopic = t
+        currentStep = s
         break
       }
     }
+    if (problem) break
   }
 
   const problemData = problem || {
@@ -111,6 +124,37 @@ export default function ProblemPage({
     slug: metadata.slug,
     difficulty: "EASY" as const,
   }
+
+  // Flatten all problems of the current step to build the ordered sequence
+  const stepProblems = currentStep
+    ? currentStep.topics.flatMap((t) => t.problems)
+    : []
+
+  const currentIndex = stepProblems.findIndex((p) => p.slug === slug)
+
+  // Compute Previous problem / step boundary
+  const hasPrevProblem = currentIndex > 0
+  const prevProblem = hasPrevProblem ? stepProblems[currentIndex - 1] : null
+  const prevHref = hasPrevProblem && prevProblem
+    ? `/problem/${prevProblem.slug}`
+    : currentStep
+    ? `/roadmap/${currentStep.slug}`
+    : "/roadmap"
+  const prevTitle = hasPrevProblem && prevProblem
+    ? `Previous: ${prevProblem.title}`
+    : `Back to Step: ${currentStep?.title || "Roadmap"}`
+
+  // Compute Next problem / step boundary
+  const hasNextProblem = currentIndex >= 0 && currentIndex < stepProblems.length - 1
+  const nextProblem = hasNextProblem ? stepProblems[currentIndex + 1] : null
+  const nextHref = hasNextProblem && nextProblem
+    ? `/problem/${nextProblem.slug}`
+    : currentStep
+    ? `/roadmap/${currentStep.slug}`
+    : "/roadmap"
+  const nextTitle = hasNextProblem && nextProblem
+    ? `Next: ${nextProblem.title}`
+    : `Finish Step: ${currentStep?.title || "Roadmap"}`
 
   const sampleConstraints = [
     "Time Limit: 5.0 seconds",
@@ -148,22 +192,21 @@ export default function ProblemPage({
         total: data.total,
         results: data.results,
       })
-    } catch (err: any) {
-      setResult({ status: "Runtime Error", error: err.message || "Failed to execute" })
+    } catch {
+      setResult({
+        status: "Runtime Error",
+        error: "Failed to connect to execution server.",
+      })
+    } finally {
+      setIsRunning(false)
     }
-    setIsRunning(false)
-  }, [code, slug, metadata, markAttempted])
+  }, [code, metadata, markAttempted, slug])
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true)
     setResult(null)
     setSelectedTab(0)
     try {
-      const allTestCases = [
-        ...metadata.sampleTestCases,
-        ...(metadata.hiddenTestCases || []),
-      ]
-
       const res = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -175,13 +218,14 @@ export default function ProblemPage({
           parameters: metadata.parameters,
           returnType: metadata.returnType,
           comparison: metadata.comparison,
-          testCases: allTestCases,
+          testCases: metadata.sampleTestCases,
           mode: "submit",
         }),
       })
       const data = await res.json()
       markAttempted(slug)
-      if (data.status === "ACCEPTED") {
+      const passed = data.status === "ACCEPTED" || data.status === "Accepted"
+      if (passed) {
         markSolved(slug)
       }
       setResult({
@@ -192,149 +236,162 @@ export default function ProblemPage({
         total: data.total,
         results: data.results,
       })
-    } catch (err: any) {
-      setResult({ status: "Runtime Error", error: err.message || "Failed to submit" })
+    } catch {
+      setResult({
+        status: "Runtime Error",
+        error: "Failed to connect to execution server.",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-    setIsSubmitting(false)
-  }, [code, slug, metadata, markAttempted, markSolved])
+  }, [code, metadata, markAttempted, markSolved, slug])
 
-  // Left panel content
+  // Left panel content: Problem Description / Learn Mode
   const leftPanel = (
-    <div className="h-full overflow-y-auto">
-      <AnimatePresence mode="wait">
-        {mode === "learn" ? (
-          <motion.div key="learn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6">
-            <div className="mb-8">
-              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                <Lightbulb className="h-5 w-5 text-medium" /> Concept
-              </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Understanding algorithmic approaches, time/space complexity trade-offs, and edge case handling for <strong>{problemData.title}</strong>.
-              </p>
+    <div className="flex h-full flex-col overflow-y-auto bg-card p-6">
+      {mode === "learn" ? (
+        <div className="space-y-6">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <BookOpen className="h-4 w-4" /> Comprehensive Learning Guide
             </div>
-            <div className="mb-8">
-              <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-                <Target className="h-5 w-5 text-primary" /> Target Method Signature
-              </h3>
-              <div className="rounded-xl border border-border bg-secondary/30 p-4 font-mono text-sm text-primary">
-                public {metadata.returnType} {metadata.methodName}(
-                {metadata.parameters.map((p, i) => (
-                  <span key={p.name} className="text-foreground">
-                    {i > 0 && ", "}
-                    <span className="text-blue-400">{p.type}</span> {p.name}
-                  </span>
-                ))}
-                )
+            <h1 className="text-2xl font-bold">{metadata.title}</h1>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              {metadata.description}
+            </p>
+          </div>
+
+          {/* Deep Concept Breakdown */}
+          <div className="rounded-2xl border border-border bg-secondary/20 p-5 space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <Lightbulb className="h-4 w-4 text-amber-400" /> Core Concepts & Intuition
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Mastering this problem requires understanding key algorithmic patterns. Focus on the constraints and think about optimal space vs. time trade-offs.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-1">
+                  <Target className="h-3.5 w-3.5 text-easy" /> Optimal Approach
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">
+                  Time: O(N) • Space: O(1)
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-background/60 p-3">
+                <div className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-1">
+                  <Zap className="h-3.5 w-3.5 text-medium" /> Method Invocation
+                </div>
+                <div className="text-xs text-muted-foreground font-mono truncate">
+                  {metadata.className}.{metadata.methodName}()
+                </div>
               </div>
             </div>
-            <div className="mb-8">
-              <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-                <Zap className="h-5 w-5 text-easy" /> Key Principles
-              </h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-easy" /> Function-based execution: Arguments are parsed and passed directly to your method</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-easy" /> Return values are evaluated as the final answer</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-easy" /> Fresh instance allocated per test case to avoid state leakage</li>
-              </ul>
-            </div>
-            <div className="mb-8">
-              <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-                <AlertTriangle className="h-5 w-5 text-hard" /> Common Mistakes
-              </h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-start gap-2"><XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-hard" /> Using Scanner or System.in (not required for LeetCode-style judges)</li>
-                <li className="flex items-start gap-2"><XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-hard" /> Printing instead of returning the result object</li>
-                <li className="flex items-start gap-2"><XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-hard" /> Off-by-one errors and array bounds violations</li>
-              </ul>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div key="test" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6">
-            <h2 className="mb-4 text-xl font-bold">{problemData.title}</h2>
-            <div className="mb-6 text-muted-foreground leading-relaxed">
-              Given the method signature below, implement the required algorithm and return the computed answer.
-            </div>
+          </div>
 
-            <div className="mb-6 rounded-xl border border-border bg-secondary/30 p-3.5 font-mono text-xs text-foreground">
-              <span className="text-muted-foreground">// Method signature:</span>
-              <div className="mt-1 text-primary">
-                public {metadata.returnType} {metadata.methodName}(
-                {metadata.parameters.map((p, i) => (
-                  <span key={p.name} className="text-foreground">
-                    {i > 0 && ", "}
-                    <span className="text-blue-400">{p.type}</span> {p.name}
-                  </span>
-                ))}
-                )
-              </div>
+          {/* Method Signature Box */}
+          <div className="rounded-2xl border border-border bg-background p-4 space-y-2">
+            <div className="text-xs font-semibold text-muted-foreground">Java Method Signature:</div>
+            <pre className="text-xs font-mono text-primary overflow-x-auto p-3 rounded-lg bg-secondary/40 border border-border">
+              public {metadata.returnType} {metadata.methodName}({metadata.parameters.map(p => `${p.type} ${p.name}`).join(", ")})
+            </pre>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Header info */}
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">
+                {formatProblemNumber(problemData.number)}
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium border ${getDifficultyBg(problemData.difficulty)}`}>
+                {problemData.difficulty}
+              </span>
+              {currentTopic && (
+                <span className="text-xs text-muted-foreground">• {currentTopic.title}</span>
+              )}
             </div>
+            <h1 className="text-2xl font-bold">{metadata.title}</h1>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              {metadata.description}
+            </p>
+          </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <ListFilter className="h-4 w-4 text-primary" /> Examples
-              </h3>
-              {metadata.sampleTestCases.map((tc, idx) => {
-                const id = tc.id || idx + 1
-                const inputStr = Object.entries(tc.inputs)
-                  .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
-                  .join(", ")
+          {/* Signature info */}
+          <div className="rounded-xl border border-border bg-secondary/30 p-4">
+            <div className="text-xs font-mono text-primary">
+              {"// Method signature:"}<br />
+              public {metadata.returnType} {metadata.methodName}({metadata.parameters.map(p => `${p.type} ${p.name}`).join(", ")})
+            </div>
+          </div>
 
-                return (
-                  <div key={id} className="rounded-xl border border-border bg-secondary/30 overflow-hidden">
-                    <button
-                      onClick={() => setExpandedExample(expandedExample === id ? null : id)}
-                      className="flex w-full items-center justify-between p-4 text-left hover:bg-secondary/50 transition-colors"
+          {/* Examples */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <ListFilter className="h-4 w-4 text-primary" /> Examples
+            </h3>
+            {metadata.sampleTestCases.map((example, idx) => (
+              <div key={idx} className="rounded-xl border border-border bg-background overflow-hidden">
+                <button
+                  onClick={() => setExpandedExample(expandedExample === idx + 1 ? null : idx + 1)}
+                  className="w-full flex items-center justify-between p-3 text-xs font-medium hover:bg-secondary/30 transition-colors"
+                >
+                  <span>Example {idx + 1}</span>
+                  {expandedExample === idx + 1 ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </button>
+                <AnimatePresence>
+                  {expandedExample === idx + 1 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="border-t border-border p-3.5 space-y-2.5 text-xs bg-secondary/10"
                     >
-                      <span className="text-sm font-medium">Example {id}</span>
-                      {expandedExample === id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                    </button>
-                    <AnimatePresence>
-                      {expandedExample === id && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                          <div className="border-t border-border p-4 space-y-3 bg-card/50">
-                            <div>
-                              <span className="text-xs font-semibold text-muted-foreground">Input:</span>
-                              <pre className="mt-1 rounded-lg bg-background p-2.5 font-mono text-xs text-foreground whitespace-pre-wrap">{inputStr}</pre>
-                            </div>
-                            <div>
-                              <span className="text-xs font-semibold text-muted-foreground">Expected Return:</span>
-                              <pre className="mt-1 rounded-lg bg-background p-2.5 font-mono text-xs text-easy whitespace-pre-wrap">{JSON.stringify(tc.expectedOutput)}</pre>
-                            </div>
-                            {tc.explanation && (
-                              <div>
-                                <span className="text-xs font-semibold text-muted-foreground">Explanation:</span>
-                                <p className="mt-1 text-xs text-muted-foreground">{tc.explanation}</p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )
-              })}
-            </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1 font-medium">Input:</div>
+                        <pre className="p-2.5 rounded-lg bg-background font-mono text-foreground border border-border/50 overflow-x-auto">
+                          {typeof example.inputs === "object"
+                            ? Object.entries(example.inputs)
+                                .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+                                .join(", ")
+                            : JSON.stringify(example.inputs)}
+                        </pre>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground mb-1 font-medium">Expected Return:</div>
+                        <pre className="p-2.5 rounded-lg bg-background font-mono text-easy border border-border/50 overflow-x-auto">
+                          {JSON.stringify(example.expectedOutput)}
+                        </pre>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
 
-            <div className="mt-8">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Constraints</h3>
-              <ul className="space-y-1.5">
-                {sampleConstraints.map((c, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />{c}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Constraints */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Constraints</h3>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {sampleConstraints.map((c, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 
-  // Right panel content
-  const rightPanel = (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-hidden">
+  // Right Panel: Editor (Top) + Action Bar & Testcase Results (Bottom) via VerticalResizablePanel
+  const editorTop = (
+    <div className="flex h-full w-full flex-col overflow-hidden bg-card">
+      <div className="flex-1 min-h-0 w-full overflow-hidden">
         <MonacoEditor
           height="100%"
           language="java"
@@ -347,6 +404,7 @@ export default function ProblemPage({
             fontFamily: "var(--font-geist-mono)",
             lineNumbers: "on",
             scrollBeyondLastLine: false,
+            automaticLayout: true,
             wordWrap: "on",
             padding: { top: 16, bottom: 16 },
             renderLineHighlight: "line",
@@ -356,35 +414,39 @@ export default function ProblemPage({
           }}
         />
       </div>
+    </div>
+  )
 
+  const resultsBottom = (
+    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       {/* Action Bar */}
-      <div className="flex items-center justify-between border-t border-border bg-background px-4 py-3">
-        <div className="text-xs text-muted-foreground font-mono">
+      <div className="flex items-center justify-between border-b border-border bg-background px-4 py-2.5 flex-shrink-0">
+        <div className="text-xs text-muted-foreground font-mono truncate">
           Java 17+ • LeetCode Method Invocation
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-shrink-0">
           <button
             onClick={handleRun}
             disabled={isRunning || isSubmitting}
-            className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-semibold transition-all hover:bg-secondary/80 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-1.5 text-xs font-semibold transition-all hover:bg-secondary/80 active:scale-95 disabled:opacity-50"
           >
-            {isRunning ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Play className="h-4 w-4 text-primary" />}
+            {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : <Play className="h-3.5 w-3.5 text-primary" />}
             Run
           </button>
           <button
             onClick={handleSubmit}
             disabled={isRunning || isSubmitting}
-            className="flex items-center gap-2 rounded-xl bg-easy px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-easy/90 disabled:opacity-50 shadow-sm shadow-easy/20"
+            className="flex items-center gap-2 rounded-xl bg-easy px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-easy/90 active:scale-95 disabled:opacity-50 shadow-sm shadow-easy/20"
           >
-            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             Submit
           </button>
         </div>
       </div>
 
       {/* Results Section */}
-      <div className="border-t border-border bg-background max-h-[300px] overflow-y-auto">
-        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between bg-secondary/20">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-secondary/20 sticky top-0 z-10 backdrop-blur-md">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Testcase Results</h3>
           {result && result.passed !== undefined && result.total !== undefined && (
             <span className="text-xs font-medium text-foreground">
@@ -397,7 +459,7 @@ export default function ProblemPage({
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Status Header */}
             <div
-              className={`flex items-center justify-between px-4 py-3 border-b border-border ${
+              className={`flex items-center justify-between px-4 py-2.5 border-b border-border ${
                 result.status === "Accepted"
                   ? "bg-easy/10 text-easy"
                   : result.status === "Wrong Answer"
@@ -405,17 +467,17 @@ export default function ProblemPage({
                   : "bg-amber-400/10 text-amber-400"
               }`}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 {result.status === "Accepted" ? (
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-4 w-4" />
                 ) : (
-                  <XCircle className="h-5 w-5" />
+                  <XCircle className="h-4 w-4" />
                 )}
-                <span className="font-bold text-sm">{result.status}</span>
+                <span className="font-bold text-xs sm:text-sm">{result.status}</span>
               </div>
-              <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
                   <span>{result.executionTime} ms</span>
                 </div>
               </div>
@@ -435,13 +497,13 @@ export default function ProblemPage({
 
             {/* Individual Test Cases Tabs */}
             {result.results && result.results.length > 0 && (
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   {result.results.map((tr, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedTab(idx)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-all ${
+                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium border transition-all ${
                         selectedTab === idx
                           ? "border-primary bg-primary/10 text-primary font-semibold"
                           : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary"
@@ -466,7 +528,7 @@ export default function ProblemPage({
                         {result.results[selectedTab].input}
                       </pre>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <div className="font-semibold text-muted-foreground mb-1">Expected:</div>
                         <pre className="rounded-lg bg-background p-2.5 font-mono text-easy whitespace-pre-wrap border border-border/50">
@@ -498,24 +560,67 @@ export default function ProblemPage({
     </div>
   )
 
+  const rightPanel = (
+    <VerticalResizablePanel
+      top={editorTop}
+      bottom={resultsBottom}
+      defaultTopHeight={55}
+      minTopHeight={20}
+      maxTopHeight={80}
+    />
+  )
+
   return (
-    <div className="flex h-screen flex-col">
-      {/* Navigation */}
-      <nav className="flex h-12 flex-shrink-0 items-center justify-between border-b border-border bg-background px-4">
-        <div className="flex items-center gap-4">
-          <Link href={step ? `/roadmap/${step.slug}` : "/roadmap"} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm hidden sm:inline">{step ? step.title : "Roadmap"}</span>
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
+      {/* Navigation Header */}
+      <nav className="flex h-12 flex-shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-4 gap-2">
+        {/* LEFT: Previous Button + Breadcrumbs + Problem Details */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Previous Button */}
+          <Link
+            href={prevHref}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-2.5 py-1 text-xs font-semibold text-foreground transition-all hover:bg-secondary hover:border-primary/40 active:scale-95 flex-shrink-0"
+            title={prevTitle}
+          >
+            <ChevronLeft className="h-3.5 w-3.5 text-primary" />
+            <span className="hidden md:inline">Prev</span>
           </Link>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-muted-foreground">{formatProblemNumber(problemData.number)}</span>
-            <span className="text-sm font-medium">{problemData.title}</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium border ${getDifficultyBg(problemData.difficulty)}`}>{problemData.difficulty}</span>
+
+          {/* Breadcrumb to step */}
+          <Link
+            href={currentStep ? `/roadmap/${currentStep.slug}` : "/roadmap"}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            title={currentStep ? `Step ${currentStep.stepNumber}: ${currentStep.title}` : "Roadmap"}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline font-medium truncate max-w-[140px]">
+              {currentStep ? currentStep.title : "Roadmap"}
+            </span>
+          </Link>
+
+          <div className="h-4 w-px bg-border flex-shrink-0" />
+
+          {/* Problem Details */}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-xs text-muted-foreground flex-shrink-0">
+              {formatProblemNumber(problemData.number)}
+            </span>
+            <span className="text-xs sm:text-sm font-semibold truncate max-w-[140px] sm:max-w-[200px] md:max-w-[280px]">
+              {problemData.title}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium border flex-shrink-0 ${getDifficultyBg(
+                problemData.difficulty
+              )}`}
+            >
+              {problemData.difficulty}
+            </span>
+
+            {/* Solved Status Toggle */}
             <button
               type="button"
               onClick={() => toggleSolved(slug)}
-              className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border bg-secondary/50 hover:bg-secondary transition-all"
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border border-border bg-secondary/50 hover:bg-secondary transition-all flex-shrink-0"
               title={
                 (hydrated ? getProblemStatus(slug).status : "NOT_STARTED") === "SOLVED"
                   ? "Click to mark as not completed"
@@ -525,29 +630,69 @@ export default function ProblemPage({
               {(hydrated ? getProblemStatus(slug).status : "NOT_STARTED") === "SOLVED" ? (
                 <>
                   <CheckCircle2 className="h-3.5 w-3.5 text-easy" />
-                  <span className="text-easy font-semibold">Solved</span>
+                  <span className="text-easy font-semibold hidden sm:inline text-xs">Solved</span>
                 </>
               ) : (
                 <>
                   <Circle className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Mark Solved</span>
+                  <span className="text-muted-foreground hidden sm:inline text-xs">Mark Solved</span>
                 </>
               )}
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setMode("learn")} className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${mode === "learn" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
-            <GraduationCap className="h-4 w-4" /> Learn
-          </button>
-          <button onClick={() => setMode("test")} className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${mode === "test" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
-            <Code2 className="h-4 w-4" /> Test
-          </button>
+
+        {/* CENTER: Learn / Test Mode Toggle */}
+        <div className="flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-1 rounded-xl bg-secondary/80 p-1 border border-border">
+            <button
+              onClick={() => setMode("learn")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                mode === "learn"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span>Learn</span>
+            </button>
+            <button
+              onClick={() => setMode("test")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                mode === "test"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <Code2 className="h-3.5 w-3.5" />
+              <span>Test</span>
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT: Next Button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href={nextHref}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-2.5 py-1 text-xs font-semibold text-foreground transition-all hover:bg-secondary hover:border-primary/40 active:scale-95"
+            title={nextTitle}
+          >
+            <span className="hidden md:inline">Next</span>
+            <ChevronRight className="h-3.5 w-3.5 text-primary" />
+          </Link>
         </div>
       </nav>
 
-      {/* Resizable IDE layout */}
-      <ResizablePanel left={leftPanel} right={rightPanel} defaultLeftWidth={40} minLeftWidth={25} maxLeftWidth={70} />
+      {/* Resizable Split Workspace (Left: Description, Right: Editor + Results) */}
+      <div className="flex-1 min-h-0 w-full overflow-hidden">
+        <ResizablePanel
+          left={leftPanel}
+          right={rightPanel}
+          defaultLeftWidth={40}
+          minLeftWidth={25}
+          maxLeftWidth={70}
+        />
+      </div>
     </div>
   )
 }

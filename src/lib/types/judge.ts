@@ -46,6 +46,7 @@ export interface StructuredTestCase {
 export interface ProblemMetadata {
   slug: string
   title: string
+  description?: string
   className: string // Default "Solution"
   methodName: string
   parameters: ParameterDefinition[]
