@@ -1,26 +1,28 @@
 <div align="center">
 
-<!-- Animated Header Banner -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,11,21,31,41&height=220&section=header&text=DSA%20Java%20Judge&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Master%20Data%20Structures%20%26%20Algorithms%20in%20Java&descAlignY=62&descAlign=50" width="100%" alt="DSA Java Judge Banner" />
+<!-- Local High-Res Hero Banner with Glowing Java Logo -->
+<img src="public/banner.svg" width="100%" alt="DSA Java Judge Banner" />
+
+<br/>
 
 <!-- Animated Typing Tagline -->
 <a href="https://github.com/roginferno17/dsa-java-judge">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=19&duration=2800&pause=1000&color=F59E0B&center=true&vCenter=true&width=650&height=45&lines=%E2%9A%A1+True+LeetCode-Style+Method+Execution;%F0%9F%93%9A+474+Curated+Striver+A2Z+DSA+Problems;%F0%9F%9A%80+Zero+Scanner+Boilerplate+%E2%80%A2+Pure+Algorithms;%F0%9F%92%BE+100%25+Offline+Progress+File+Sync;%E2%9C%A8+One-Click+Windows+Desktop+Launcher" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=19&duration=2600&pause=1000&color=F59E0B&center=true&vCenter=true&width=650&height=45&lines=%E2%9A%A1+True+LeetCode-Style+Method+Execution;%F0%9F%93%9A+474+Curated+Striver+A2Z+DSA+Problems;%F0%9F%9A%80+Zero+Scanner+Boilerplate+%E2%80%A2+Pure+Algorithms;%F0%9F%92%BE+100%25+Offline+Progress+File+Sync;%E2%9C%A8+One-Click+Windows+Desktop+Launcher" alt="Typing Tagline" />
 </a>
 
 <br/>
 
-<!-- Modern Badges Grid -->
+<!-- Modern Tech Badges Grid -->
 <p align="center">
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js%2015-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" /></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript%205-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
   <a href="https://www.oracle.com/java/"><img src="https://img.shields.io/badge/Java%2021-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java" /></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind%20CSS%204-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind%20CSS%204-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /></a>
   <a href="https://microsoft.github.io/monaco-editor/"><img src="https://img.shields.io/badge/Monaco%20Editor-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Monaco" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" alt="License" /></a>
 </p>
 
-<!-- Quick Link Matrix -->
+<!-- Quick Navigation Matrix -->
 <p align="center">
   <a href="#-key-features"><b>🌟 Features</b></a> •
   <a href="#-quick-start"><b>🚀 Quick Start</b></a> •
@@ -30,15 +32,15 @@
   <a href="#-tech-stack"><b>🛠️ Tech Stack</b></a>
 </p>
 
-<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/gradient.png" width="100%" alt="Divider" />
-
 </div>
+
+---
 
 ## 💡 Overview
 
-**DSA Java Judge** is a full-stack, desktop-ready online judge crafted specifically for mastering Data Structures & Algorithms in **Java**.
+**DSA Java Judge** is a desktop-ready online coding judge crafted specifically for mastering Data Structures & Algorithms in **Java**.
 
-Built directly around the renowned **Striver A2Z DSA Sheet** (474 problems across 18 progressive steps), it delivers a native **LeetCode-style function execution experience**. You write pure algorithms inside your method signature — the sandbox handles reflection invocation, argument deserialization, return-value evaluation, and error diagnostics automatically.
+Built directly around the popular **Striver A2Z DSA Sheet** (474 problems across 18 progressive steps), it delivers a native **LeetCode-style function execution experience**. You write pure algorithms inside your method signature — the sandbox handles reflection invocation, argument deserialization, return-value evaluation, and error diagnostics automatically.
 
 ---
 
@@ -273,7 +275,7 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,11,21,31,41&height=120&section=footer" width="100%" alt="Footer Banner" />
+<img src="public/footer.svg" width="100%" alt="Footer Wave Banner" />
 
 <br/>
 
