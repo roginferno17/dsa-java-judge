@@ -111,6 +111,12 @@ export default function Home() {
             <span className="text-lg font-bold">DSA Java Judge</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              href="/learn/java"
+              className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+            >
+              Java syntax
+            </Link>
             <UserMenu />
             <Link
               href="/roadmap"
