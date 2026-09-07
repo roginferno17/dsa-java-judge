@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, use } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  ArrowLeft,
   BookOpen,
   Code2,
   Play,
@@ -31,9 +30,13 @@ import { curriculum } from "@/lib/data/curriculum"
 import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
 import { ResizablePanel, VerticalResizablePanel } from "@/components/ui/resizable-panel"
+import { BackButton } from "@/components/layout/back-button"
 import { getProblemMetadata } from "@/lib/data/problem-metadata"
 import { TestResultItem } from "@/lib/types/judge"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
+import { PracticeCard } from "@/components/practice/practice-card"
+import { getPracticeLinks } from "@/lib/data/practice"
+import { useSettingsStore } from "@/lib/settings/store"
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -92,6 +95,9 @@ export default function ProblemPage({
   const [expandedExample, setExpandedExample] = useState<number | null>(1)
   const [selectedTab, setSelectedTab] = useState<number>(0)
   const { markAttempted, markSolved, toggleSolved, getProblemStatus } = useProgressStore()
+  const cfMin = useSettingsStore((s) => s.settings.practice.cfRatingMin)
+  const cfMax = useSettingsStore((s) => s.settings.practice.cfRatingMax)
+  const practiceLinks = getPracticeLinks(slug, { cfRatingMin: cfMin, cfRatingMax: cfMax })
 
   // Reset editor code and results when navigating between problems
   useEffect(() => {
@@ -383,6 +389,9 @@ export default function ProblemPage({
               ))}
             </ul>
           </div>
+
+          {/* LeetCode / Codeforces problems covering the same ground */}
+          <PracticeCard links={practiceLinks} />
         </div>
       )}
     </div>
@@ -586,14 +595,22 @@ export default function ProblemPage({
             <span className="hidden md:inline">Prev</span>
           </Link>
 
+          {/* History back, distinct from Prev: Prev walks the curriculum in order,
+              this returns wherever you actually came from. Falls back to the step
+              page when there is no history (opened in a new window). */}
+          <BackButton
+            fallbackHref={currentStep ? `/roadmap/${currentStep.slug}` : "/roadmap"}
+            label="Back"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          />
+
           {/* Breadcrumb to step */}
           <Link
             href={currentStep ? `/roadmap/${currentStep.slug}` : "/roadmap"}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+            className="hidden lg:flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
             title={currentStep ? `Step ${currentStep.stepNumber}: ${currentStep.title}` : "Roadmap"}
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline font-medium truncate max-w-[120px]">
+            <span className="font-medium truncate max-w-[120px]">
               {currentStep ? currentStep.title : "Roadmap"}
             </span>
           </Link>
