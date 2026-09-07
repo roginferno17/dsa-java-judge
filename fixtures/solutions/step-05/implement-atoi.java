@@ -1,0 +1,20 @@
+class Solution {
+    public int myAtoi(String s) {
+        int i = 0, n = s.length();
+        while (i < n && s.charAt(i) == ' ') i++;
+        if (i == n) return 0;
+        int sign = 1;
+        if (s.charAt(i) == '+' || s.charAt(i) == '-') {
+            if (s.charAt(i) == '-') sign = -1;
+            i++;
+        }
+        long acc = 0;
+        while (i < n && Character.isDigit(s.charAt(i))) {
+            acc = acc * 10 + (s.charAt(i) - '0');
+            if (sign == 1 && acc > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+            if (sign == -1 && -acc < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+            i++;
+        }
+        return (int) (sign * acc);
+    }
+}
