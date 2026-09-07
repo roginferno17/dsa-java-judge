@@ -120,10 +120,17 @@ for (const slug of slugs) {
       `reference solution did not pass: ${solved.status} ${solved.passed ?? 0}/${solved.total ?? "?"}` +
         (solved.error ? ` — ${solved.error.split("\n")[0]}` : "")
     )
-    const firstBad = (solved.results ?? []).find((r) => !r.passed)
+    // The API masks hidden cases, which is right for a learner and useless when
+    // authoring. Re-run with the hidden flag stripped to see what actually broke.
+    const unmasked = await run(
+      p,
+      reference,
+      allCases.map(({ isHidden, ...rest }) => rest)
+    )
+    const firstBad = (unmasked.results ?? []).find((r) => !r.passed)
     if (firstBad) {
       problems_failed.push(
-        `  first failing case: input=${firstBad.input} expected=${firstBad.expected} got=${firstBad.actual}`
+        `  first failing case: input=${firstBad.input}  expected=${firstBad.expected}  got=${firstBad.actual}`
       )
     }
   }

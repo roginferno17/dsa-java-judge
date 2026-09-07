@@ -1,5 +1,6 @@
 import type { ProblemMetadata } from "@/lib/types/judge"
 import { step04OneD } from "@/lib/data/problems/step-04-1d"
+import { step04Space } from "@/lib/data/problems/step-04-space"
 import { step04TwoD } from "@/lib/data/problems/step-04-2d"
 
 /**
@@ -10,5 +11,6 @@ import { step04TwoD } from "@/lib/data/problems/step-04-2d"
  */
 export const step04: Record<string, ProblemMetadata> = {
   ...step04OneD,
+  ...step04Space,
   ...step04TwoD,
 }
