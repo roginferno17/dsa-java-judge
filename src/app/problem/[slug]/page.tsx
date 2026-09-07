@@ -16,7 +16,7 @@ import {
   Circle,
   XCircle,
   Clock,
-  Cpu,
+
   Lightbulb,
   AlertTriangle,
   Target,
