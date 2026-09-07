@@ -1,106 +1,131 @@
 import { NextRequest, NextResponse } from "next/server"
-import { readFile, writeFile, mkdir } from "fs/promises"
-import { join } from "path"
-import { existsSync } from "fs"
+import {
+  ActivityEvent,
+  ProgressSnapshot,
+  appendEvents,
+  migrateSnapshotToLog,
+  readSnapshot,
+  rebuildSnapshot,
+  sanitizeProblems,
+  writeSnapshot,
+} from "@/lib/progress/events"
 
-const DATA_DIR = join(process.cwd(), "user_data")
-const PROGRESS_FILE = join(DATA_DIR, "progress.json")
-
-interface ProgressFileStructure {
-  version: string
-  lastUpdated: string
-  problems: Record<
-    string,
-    {
-      status: "NOT_STARTED" | "ATTEMPTED" | "SOLVED"
-      attempts: number
-      lastAttemptAt?: string
-      solvedAt?: string
-    }
-  >
-}
-
-async function ensureDataDirectory() {
-  if (!existsSync(DATA_DIR)) {
-    await mkdir(DATA_DIR, { recursive: true })
+/**
+ * Seed the log from a legacy progress.json. migrateSnapshotToLog() is already a
+ * no-op once the log exists, so this needs no in-process latch -- and must not
+ * have one, or the log could never be rebuilt after being cleared.
+ */
+async function ensureMigrated() {
+  try {
+    await migrateSnapshotToLog()
+  } catch (err) {
+    console.error("Progress migration failed:", err)
   }
 }
 
-// GET: Read current progress from local file
+const message = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
+
+/** GET: current progress snapshot, rebuilt from the log if the file is missing. */
 export async function GET() {
   try {
-    await ensureDataDirectory()
-
-    if (!existsSync(PROGRESS_FILE)) {
-      const initialData: ProgressFileStructure = {
-        version: "1.0",
-        lastUpdated: new Date().toISOString(),
-        problems: {},
-      }
-      await writeFile(PROGRESS_FILE, JSON.stringify(initialData, null, 2), "utf-8")
-      return NextResponse.json(initialData)
+    await ensureMigrated()
+    const snapshot = await readSnapshot()
+    if (!Object.keys(snapshot.problems).length) {
+      // Either a fresh install or a lost snapshot; the log is authoritative.
+      return NextResponse.json(await rebuildSnapshot())
     }
-
-    const content = await readFile(PROGRESS_FILE, "utf-8")
-    const parsed: ProgressFileStructure = JSON.parse(content)
-    return NextResponse.json(parsed)
-  } catch (error: any) {
+    return NextResponse.json(snapshot)
+  } catch (error) {
     console.error("Error reading progress file:", error)
     return NextResponse.json(
-      { error: "Failed to read progress", details: error.message },
+      { error: "Failed to read progress", details: message(error) },
       { status: 500 }
     )
   }
 }
 
-// POST: Save/Sync progress to local file
+/**
+ * POST: import a snapshot (backup restore).
+ *
+ * Normal day-to-day updates go through /api/events instead; this endpoint exists
+ * for restoring a backup, and validates the payload rather than trusting it.
+ */
 export async function POST(request: NextRequest) {
   try {
-    await ensureDataDirectory()
-
+    await ensureMigrated()
     const body = await request.json()
-    const problems = body.problems || {}
 
-    const updatedData: ProgressFileStructure = {
-      version: "1.0",
-      lastUpdated: new Date().toISOString(),
-      problems,
+    if (!body || typeof body !== "object" || typeof body.problems !== "object") {
+      return NextResponse.json(
+        { error: "Expected an object with a 'problems' map" },
+        { status: 400 }
+      )
     }
 
-    await writeFile(PROGRESS_FILE, JSON.stringify(updatedData, null, 2), "utf-8")
+    const problems = sanitizeProblems(body.problems)
+    const rejected = Object.keys(body.problems ?? {}).length - Object.keys(problems).length
+
+    const now = new Date().toISOString()
+    const snapshot: ProgressSnapshot = { version: "2.0", lastUpdated: now, problems }
+    await writeSnapshot(snapshot)
+
+    // Mirror the import into the log so streaks and the heatmap stay consistent.
+    const imported: ActivityEvent[] = []
+    for (const [slug, p] of Object.entries(problems)) {
+      if (p.status === "SOLVED") {
+        imported.push({ ts: p.solvedAt || now, type: "SOLVE", slug, verdict: "IMPORTED" })
+      } else if (p.status === "ATTEMPTED") {
+        imported.push({ ts: p.lastAttemptAt || now, type: "ATTEMPT", slug, verdict: "IMPORTED" })
+      }
+    }
+    await appendEvents(imported)
 
     return NextResponse.json({
       success: true,
-      lastUpdated: updatedData.lastUpdated,
+      lastUpdated: now,
       totalProblemsTracked: Object.keys(problems).length,
+      ...(rejected > 0 ? { rejectedEntries: rejected } : {}),
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error saving progress file:", error)
     return NextResponse.json(
-      { error: "Failed to save progress", details: error.message },
+      { error: "Failed to save progress", details: message(error) },
       { status: 500 }
     )
   }
 }
 
-// DELETE: Reset local progress file
-export async function DELETE() {
+/**
+ * DELETE: reset the snapshot.
+ *
+ * The activity log is deliberately left intact -- it is the historical record, and
+ * wiping it would destroy the heatmap. Pass ?purge=1 to erase history too.
+ */
+export async function DELETE(request: NextRequest) {
   try {
-    await ensureDataDirectory()
+    const purge = request.nextUrl.searchParams.get("purge") === "1"
+    const now = new Date().toISOString()
 
-    const resetData: ProgressFileStructure = {
-      version: "1.0",
-      lastUpdated: new Date().toISOString(),
-      problems: {},
+    await writeSnapshot({ version: "2.0", lastUpdated: now, problems: {} })
+
+    if (purge) {
+      const { writeFile } = await import("fs/promises")
+      const { EVENTS_FILE } = await import("@/lib/progress/events")
+      await writeFile(EVENTS_FILE, "", "utf-8")
     }
 
-    await writeFile(PROGRESS_FILE, JSON.stringify(resetData, null, 2), "utf-8")
-
-    return NextResponse.json({ success: true, message: "Progress reset successfully" })
-  } catch (error: any) {
+    return NextResponse.json({
+      success: true,
+      message: purge
+        ? "Progress and activity history erased."
+        : "Progress reset. Activity history kept — use ?purge=1 to erase it as well.",
+      historyKept: !purge,
+    })
+  } catch (error) {
     console.error("Error resetting progress file:", error)
     return NextResponse.json(
-      { error: "Failed to reset progress", details: error.message },
+      { error: "Failed to reset progress", details: message(error) },
       { status: 500 }
     )
   }
