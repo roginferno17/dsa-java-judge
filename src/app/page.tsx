@@ -12,11 +12,14 @@ import {
   ChevronRight,
 } from "lucide-react"
 import Link from "next/link"
-import { UserMenu } from "@/components/auth/user-menu"
+import { UserMenu } from "@/components/layout/user-menu"
+import { curriculum, getTotalProblemCount } from "@/lib/data/curriculum"
 
+// Derived, not hardcoded: this used to read "474" while the header showed the
+// real count from getTotalProblemCount(), so the homepage contradicted itself.
 const stats = [
-  { label: "Problems", value: "474", icon: Code2 },
-  { label: "Topics", value: "18", icon: BookOpen },
+  { label: "Problems", value: String(getTotalProblemCount()), icon: Code2 },
+  { label: "Steps", value: String(curriculum.length), icon: BookOpen },
   { label: "Difficulty Levels", value: "3", icon: Target },
 ]
 
@@ -251,7 +254,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="space-y-4"
           >
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <motion.div
                 key={step.number}
                 variants={item}

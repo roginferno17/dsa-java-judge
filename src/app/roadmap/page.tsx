@@ -6,14 +6,11 @@ import {
   BookOpen,
   Code2,
   ArrowLeft,
-  CheckCircle2,
-  Circle,
-  Lock,
 } from "lucide-react"
 import Link from "next/link"
 import { curriculum, getStepProblemCount, getTotalProblemCount } from "@/lib/data/curriculum"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/auth/user-menu"
+import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 
 const container = {

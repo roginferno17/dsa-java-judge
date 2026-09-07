@@ -14,7 +14,7 @@ import Link from "next/link"
 import { curriculum, getStepProblemCount } from "@/lib/data/curriculum"
 import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/auth/user-menu"
+import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 
 const container = {

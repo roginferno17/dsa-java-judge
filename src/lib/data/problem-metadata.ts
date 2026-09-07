@@ -1,4 +1,4 @@
-import { ProblemMetadata, StructuredTestCase } from "@/lib/types/judge"
+import { ProblemMetadata } from "@/lib/types/judge"
 import { curriculum } from "@/lib/data/curriculum"
 
 export const problemRegistry: Record<string, ProblemMetadata> = {

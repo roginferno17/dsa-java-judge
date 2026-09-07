@@ -1,7 +1,8 @@
 // ============================================================
 // STRIVER A2Z DSA CURRICULUM DATA
 // Based on: https://takeuforward.org/dsa/strivers-a2z-sheet-learn-dsa-a-to-z
-// Total Problems: 474 (152 Easy, 186 Medium, 136 Hard)
+// Total problems: 398 across 18 steps. Use getTotalProblemCount() rather than
+// hardcoding a number anywhere -- the previous 474 was wrong and drifted from the UI.
 // ============================================================
 
 export interface TopicData {
