@@ -9,9 +9,27 @@ import java.util.*;
 class ListNode {
     public int val;
     public ListNode next;
+    /** Used by flattening problems, where each node heads a sorted sub-list. */
+    public ListNode bottom;
+    /** Used by deep-copy problems; points anywhere in the list, or is null. */
+    public ListNode random;
     public ListNode() {}
     public ListNode(int val) { this.val = val; }
     public ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+}
+
+/** Doubly linked list node. Step 6 needs prev as well as next. */
+class DoublyListNode {
+    public int val;
+    public DoublyListNode next;
+    public DoublyListNode prev;
+    public DoublyListNode() {}
+    public DoublyListNode(int val) { this.val = val; }
+    public DoublyListNode(int val, DoublyListNode prev, DoublyListNode next) {
+        this.val = val;
+        this.prev = prev;
+        this.next = next;
+    }
 }
 
 class TreeNode {
@@ -247,13 +265,25 @@ public class __Driver__ {
                 return num(((Number) o).doubleValue(), false);
             }
             if (o instanceof ListNode) {
+                // Identity-based visited set rather than a counter: a returned list
+                // may legitimately still contain a cycle, and walking it forever
+                // would hang the judge instead of reporting an answer.
                 List<Canon> xs = new ArrayList<>();
+                Set<ListNode> seen = Collections.newSetFromMap(new IdentityHashMap<>());
                 ListNode cur = (ListNode) o;
-                int guard = 0;
-                while (cur != null) {
+                while (cur != null && seen.add(cur)) {
                     xs.add(num(cur.val, true));
                     cur = cur.next;
-                    if (++guard > 100000) break; // cycle guard
+                }
+                return arr(xs);
+            }
+            if (o instanceof DoublyListNode) {
+                List<Canon> xs = new ArrayList<>();
+                Set<DoublyListNode> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+                DoublyListNode cur = (DoublyListNode) o;
+                while (cur != null && seen.add(cur)) {
+                    xs.add(num(cur.val, true));
+                    cur = cur.next;
                 }
                 return arr(xs);
             }
@@ -342,7 +372,8 @@ public class __Driver__ {
         static boolean equal(Canon a, Canon b, boolean orderMatters, String type) {
             // A null head and an empty list mean the same thing for linked/tree returns.
             boolean nullish = type != null
-                    && (type.contains("ListNode") || type.contains("TreeNode"));
+                    && (type.contains("ListNode") || type.contains("TreeNode")
+                        || type.contains("DoublyListNode"));
             if (nullish) {
                 if (a.kind == Kind.NULL && b.kind == Kind.ARR && b.items.isEmpty()) return true;
                 if (b.kind == Kind.NULL && a.kind == Kind.ARR && a.items.isEmpty()) return true;
@@ -438,7 +469,13 @@ public class __Driver__ {
             case "String[][]":  return pc == String[][].class;
             case "boolean[][]": return pc == boolean[][].class;
             case "double[][]":  return pc == double[][].class;
-            case "ListNode":  return pc.getSimpleName().equals("ListNode");
+            case "ListNode":
+            case "ListNodeCyclic":
+            case "ListNodeNested":
+            case "ListNodeRandom":
+                return pc.getSimpleName().equals("ListNode");
+            case "DoublyListNode":
+                return pc.getSimpleName().equals("DoublyListNode");
             case "TreeNode":  return pc.getSimpleName().equals("TreeNode");
             default:
                 if (typeName.startsWith("List")) return List.class.isAssignableFrom(pc);
@@ -649,6 +686,73 @@ public class __Driver__ {
                     cur = cur.next;
                 }
                 return dummy.next;
+            }
+            case "DoublyListNode": {
+                SimpleJson.JsonArray a = val.asArray();
+                if (a.values.isEmpty()) return null;
+                DoublyListNode head = null, tail = null;
+                for (SimpleJson.JsonValue e : a.values) {
+                    DoublyListNode node = new DoublyListNode((int) e.asNumber());
+                    if (head == null) { head = node; tail = node; }
+                    else { tail.next = node; node.prev = tail; tail = node; }
+                }
+                return head;
+            }
+            case "ListNodeCyclic": {
+                // Input shape: [[values...], pos]. pos is the index the tail links
+                // back to, or -1 for no cycle. A cycle cannot be expressed as a
+                // flat array, which is why this needs its own type.
+                SimpleJson.JsonArray outer = val.asArray();
+                if (outer.values.isEmpty()) return null;
+                SimpleJson.JsonArray vals = outer.values.get(0).asArray();
+                int pos = outer.values.size() > 1 ? (int) outer.values.get(1).asNumber() : -1;
+                if (vals.values.isEmpty()) return null;
+                List<ListNode> nodes = new ArrayList<>();
+                ListNode dummy = new ListNode(0), cur = dummy;
+                for (SimpleJson.JsonValue e : vals.values) {
+                    cur.next = new ListNode((int) e.asNumber());
+                    cur = cur.next;
+                    nodes.add(cur);
+                }
+                if (pos >= 0 && pos < nodes.size()) cur.next = nodes.get(pos);
+                return dummy.next;
+            }
+            case "ListNodeNested": {
+                // Input shape: [[a,b],[c],[d,e,f]]. Each inner array becomes a
+                // bottom-linked column; the column heads are joined by next.
+                SimpleJson.JsonArray outer = val.asArray();
+                if (outer.values.isEmpty()) return null;
+                ListNode head = null, prevHead = null;
+                for (SimpleJson.JsonValue col : outer.values) {
+                    SimpleJson.JsonArray inner = col.asArray();
+                    if (inner.values.isEmpty()) continue;
+                    ListNode colHead = null, colCur = null;
+                    for (SimpleJson.JsonValue e : inner.values) {
+                        ListNode node = new ListNode((int) e.asNumber());
+                        if (colHead == null) { colHead = node; colCur = node; }
+                        else { colCur.bottom = node; colCur = node; }
+                    }
+                    if (head == null) head = colHead;
+                    else prevHead.next = colHead;
+                    prevHead = colHead;
+                }
+                return head;
+            }
+            case "ListNodeRandom": {
+                // Input shape: [[val, randomIndex], ...] with -1 meaning null.
+                SimpleJson.JsonArray outer = val.asArray();
+                if (outer.values.isEmpty()) return null;
+                List<ListNode> nodes = new ArrayList<>();
+                for (SimpleJson.JsonValue pair : outer.values) {
+                    nodes.add(new ListNode((int) pair.asArray().values.get(0).asNumber()));
+                }
+                for (int i = 0; i < nodes.size(); i++) {
+                    if (i + 1 < nodes.size()) nodes.get(i).next = nodes.get(i + 1);
+                    SimpleJson.JsonArray pair = outer.values.get(i).asArray();
+                    int r = pair.values.size() > 1 ? (int) pair.values.get(1).asNumber() : -1;
+                    if (r >= 0 && r < nodes.size()) nodes.get(i).random = nodes.get(r);
+                }
+                return nodes.get(0);
             }
             case "TreeNode": {
                 SimpleJson.JsonArray a = val.asArray();

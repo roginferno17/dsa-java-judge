@@ -26,6 +26,10 @@ export type JavaType =
   | "List<List<Integer>>"
   | "List<List<String>>"
   | "ListNode"
+  | "ListNodeCyclic"
+  | "ListNodeNested"
+  | "ListNodeRandom"
+  | "DoublyListNode"
   | "TreeNode"
   | "void"
 
