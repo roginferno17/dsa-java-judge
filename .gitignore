@@ -48,3 +48,7 @@ AGENTS.md
 CLAUDE.md
 .gemini
 .agents
+
+# Local user progress, settings and caches (per-machine, never shared)
+/user_data/
+!/user_data/.gitkeep
