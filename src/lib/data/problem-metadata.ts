@@ -5,6 +5,7 @@ import { step03 } from "@/lib/data/problems/step-03"
 import { step04 } from "@/lib/data/problems/step-04"
 import { step05 } from "@/lib/data/problems/step-05"
 import { step06 } from "@/lib/data/problems/step-06"
+import { step07 } from "@/lib/data/problems/step-07"
 
 /**
  * Authored problem metadata, merged from one module per curriculum step.
@@ -20,6 +21,7 @@ export const problemRegistry: Record<string, ProblemMetadata> = {
   ...step04,
   ...step05,
   ...step06,
+  ...step07,
 }
 
 /**
