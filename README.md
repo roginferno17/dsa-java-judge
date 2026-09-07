@@ -157,13 +157,35 @@ while v5 was installed. The app was always fully local.
       <h3>📚 Striver A2Z Sheet (398 Problems)</h3>
       <ul>
         <li><b>18 progressive steps</b>, from basics and sorting through trees, graphs, DP and tries.</li>
-        <li><b>Dual mode workspace</b>:
+        <li><b>Three-mode workspace</b>:
           <ul>
-            <li>📖 <b>Learn</b> — intuition, approach and complexity.</li>
+            <li>📖 <b>Learn</b> — intuition, approach, pitfalls, complexity.</li>
             <li>⚡ <b>Test</b> — Monaco editor with a test-case inspector.</li>
+            <li>📝 <b>Notes</b> — your own scratchpad, saved to disk.</li>
           </ul>
         </li>
+        <li><b>Search across all 398</b> with <kbd>Ctrl</kbd>+<kbd>K</kbd>, filtered by difficulty and status.</li>
         <li><b>One-click completion toggles</b> with live progress.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>☕ Java Syntax Track</h3>
+      <ul>
+        <li><b>Seven lessons</b> at <code>/learn/java</code>: overflow, arrays, strings, collections, deques and heaps, boxing traps, recursion depth.</li>
+        <li><b>28 editable, runnable snippets</b> — change a line and run it in the same sandbox the judge uses.</li>
+        <li><b>Gated in CI</b>: every snippet must compile and print exactly what the page claims.</li>
+        <li>Aimed at the gap between knowing an algorithm and writing it in Java.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>✅ Verified Content</h3>
+      <ul>
+        <li><b>398 reference solutions</b> committed under <code>fixtures/solutions/</code>.</li>
+        <li><b>Starter code must FAIL</b> its own tests — a green run on untouched starter code would mean the test proves nothing.</li>
+        <li><b>Expected outputs checked independently</b> of the reference solution, by brute force, before the solution was written.</li>
+        <li>Ambiguous answers are ruled out by stating an ordering, not left to chance.</li>
       </ul>
     </td>
   </tr>
@@ -289,10 +311,13 @@ bash scripts/driver-smoke.sh
 
 </details>
 
-> **Note on coverage.** All 398 problems are listed and trackable, but only some have a full judge
-> harness so far — the rest are being written step by step, starting from Step 1. A problem without a
-> harness says so plainly rather than showing a placeholder test. **Settings → Curriculum → Hide
-> problems without a judge harness** filters them out if you would rather only see what is ready.
+> **Coverage: all 398.** Every problem has a real statement, constraints, a method signature,
+> starter code, worked examples, hidden edge cases, and authored teaching notes — plus a reference
+> solution committed under `fixtures/solutions/`. Nothing is generated or placeholder.
+>
+> Each step was gated by `scripts/verify-step.mjs` before it shipped. Per problem, that script
+> requires the starter code to compile AND fail its own tests, and the committed reference solution
+> to pass every sample and hidden case. A step that does not pass does not ship.
 
 ---
 
@@ -314,28 +339,45 @@ node scripts/events-smoke.mjs     # activity log and streak maths
 node scripts/judge-smoke.mjs      # end-to-end, needs `npm run dev` running
 ```
 
+Two content gates, both needing the dev server:
+
+```bash
+# One curriculum step: starter must compile and FAIL, reference must pass everything
+node --import ./scripts/register-alias.mjs scripts/verify-step.mjs 01
+
+# Every snippet in the Java track compiles, runs, and prints what the page claims
+node --import ./scripts/register-alias.mjs scripts/verify-java-guide.mjs
+```
+
 ### Project structure
 
 ```text
-├── user_data/                    # local progress, settings, activity log (git-ignored)
-├── scripts/                      # test suites
+├── user_data/                    # local progress, notes, settings, activity log (git-ignored)
+├── fixtures/solutions/           # a reference solution per problem, run by the gate
+├── scripts/                      # test suites and content gates
 ├── src/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── execute/          # compile + run a solution
 │   │   │   ├── events/           # append-only activity log
+│   │   │   ├── notes/            # per-problem scratchpad notes
 │   │   │   ├── progress/         # snapshot read / import / reset
 │   │   │   ├── settings/         # settings persistence
 │   │   │   └── storage/          # measured disk usage + cleanup
-│   │   ├── problem/[slug]/       # workspace: editor, learn mode, results
-│   │   ├── roadmap/              # curriculum and step pages
+│   │   ├── learn/java/           # Java syntax track, runnable snippets
+│   │   ├── problem/[slug]/       # workspace: editor, learn mode, notes, results
+│   │   ├── roadmap/              # curriculum, search, step pages
 │   │   └── settings/             # settings page
 │   ├── components/
 │   │   ├── layout/               # shell, local-data menu, back button
+│   │   ├── learn/                # runnable Java snippet
+│   │   ├── notes/                # per-problem scratchpad
 │   │   ├── providers/            # theme provider + pre-hydration script
+│   │   ├── search/               # search across all 398 problems
 │   │   └── ui/                   # resizable split panels
 │   ├── lib/
-│   │   ├── data/                 # curriculum and problem metadata
+│   │   ├── data/                 # curriculum, problem metadata, Java guide
+│   │   ├── notes/                # notes store
 │   │   ├── executor/
 │   │   │   ├── java/             # __Driver__.java — the reflection harness
 │   │   │   └── sandbox.ts        # compile, run, limits, cleanup
