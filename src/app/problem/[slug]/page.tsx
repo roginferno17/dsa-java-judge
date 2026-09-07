@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   Target,
   GraduationCap,
+  NotebookPen,
   Loader2,
   ListFilter,
   Terminal,
@@ -44,6 +45,7 @@ import {
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { useCodeDraft } from "@/lib/hooks/use-code-draft"
 import { PracticeCard } from "@/components/practice/practice-card"
+import { ProblemNotes } from "@/components/notes/problem-notes"
 import { getPracticeLinks } from "@/lib/data/practice"
 import { useSettingsStore } from "@/lib/settings/store"
 
@@ -67,7 +69,7 @@ function findInCurriculum(slug: string) {
   return { currentStep: null, currentTopic: null, problem: null }
 }
 
-type Mode = "learn" | "test"
+type Mode = "learn" | "test" | "notes"
 type ResultTab = "cases" | "console"
 
 interface ExecutionResult {
@@ -337,7 +339,9 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
 
   const leftPanel = (
     <div className="flex h-full flex-col overflow-y-auto bg-card p-6">
-      {mode === "learn" ? (
+      {mode === "notes" ? (
+        <ProblemNotes slug={slug} title={metadata.title} />
+      ) : mode === "learn" ? (
         <div className="space-y-6">
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
@@ -360,12 +364,12 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             <div className="rounded-2xl border border-dashed border-border bg-secondary/20 p-5">
               <div className="mb-1.5 flex items-center gap-2 text-sm font-semibold">
                 <Lightbulb className="h-4 w-4 text-amber-400" />
-                Notes for this problem are not written yet
+                No explanation written for this problem yet
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Rather than show a generic explanation that might not apply here, this stays empty
-                until real notes exist. The Test tab still works, and the practice links below cover
-                the same ground.
+                until a real one is written. The Test tab still works, and the practice links below
+                cover the same ground.
               </p>
             </div>
           )}
@@ -823,6 +827,17 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             >
               <Code2 className="h-3.5 w-3.5" />
               <span>Test</span>
+            </button>
+            <button
+              onClick={() => setMode("notes")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                mode === "notes"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <NotebookPen className="h-3.5 w-3.5" />
+              <span>Notes</span>
             </button>
           </div>
         </div>
