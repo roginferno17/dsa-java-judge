@@ -2,6 +2,7 @@ import type { ProblemMetadata } from "@/lib/types/judge"
 import { step01 } from "@/lib/data/problems/step-01"
 import { step02 } from "@/lib/data/problems/step-02"
 import { step03 } from "@/lib/data/problems/step-03"
+import { step04 } from "@/lib/data/problems/step-04"
 
 /**
  * Authored problem metadata, merged from one module per curriculum step.
@@ -14,6 +15,7 @@ export const problemRegistry: Record<string, ProblemMetadata> = {
   ...step01,
   ...step02,
   ...step03,
+  ...step04,
 }
 
 /**
