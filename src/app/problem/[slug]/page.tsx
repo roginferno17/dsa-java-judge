@@ -35,7 +35,12 @@ import { useProgressStore } from "@/lib/progress/store"
 import { ResizablePanel, VerticalResizablePanel } from "@/components/ui/resizable-panel"
 import { BackButton } from "@/components/layout/back-button"
 import { getProblemMetadata } from "@/lib/data/problem-metadata"
-import { ProblemLearnContent, StructuredTestCase, TestResultItem } from "@/lib/types/judge"
+import {
+  ProblemLearnContent,
+  ProblemMetadata,
+  StructuredTestCase,
+  TestResultItem,
+} from "@/lib/types/judge"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { useCodeDraft } from "@/lib/hooks/use-code-draft"
 import { PracticeCard } from "@/components/practice/practice-card"
@@ -107,8 +112,15 @@ export default function ProblemPage({
 }
 
 function Workspace({ slug }: { slug: string }) {
-  const hydrated = useHydrated()
   const metadata = getProblemMetadata(slug)
+  // No harness authored yet. Shown as a designed state rather than a fabricated
+  // signature with a test the starter code already passes.
+  if (!metadata) return <UnauthoredProblem slug={slug} />
+  return <AuthoredWorkspace slug={slug} metadata={metadata} />
+}
+
+function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: ProblemMetadata }) {
+  const hydrated = useHydrated()
 
   const settings = useSettingsStore((s) => s.settings)
   const [mode, setMode] = useState<Mode>("test")
@@ -1024,6 +1036,105 @@ function LearnContent({ learn }: { learn: ProblemLearnContent }) {
           </ul>
         </Disclosure>
       )}
+    </div>
+  )
+}
+
+/**
+ * A problem that is listed in the curriculum but has no judge harness yet.
+ *
+ * Deliberately not a dead end and deliberately not a fake: the header, difficulty,
+ * navigation, notes and the Mark Solved toggle all still work, and the practice
+ * links point at the same material elsewhere. What it never does is show a test
+ * case that passes on the starter code and call that progress.
+ */
+function UnauthoredProblem({ slug }: { slug: string }) {
+  const { currentStep, currentTopic, problem } = findInCurriculum(slug)
+  const hydrated = useHydrated()
+  const { toggleSolved, getProblemStatus } = useProgressStore()
+  const cfMin = useSettingsStore((s) => s.settings.practice.cfRatingMin)
+  const cfMax = useSettingsStore((s) => s.settings.practice.cfRatingMax)
+  const links = getPracticeLinks(slug, { cfRatingMin: cfMin, cfRatingMax: cfMax })
+
+  const isSolved = hydrated && getProblemStatus(slug).status === "SOLVED"
+  const title = problem?.title ?? slug.replace(/-/g, " ")
+
+  return (
+    <div className="min-h-screen">
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-6">
+          <BackButton fallbackHref={currentStep ? `/roadmap/${currentStep.slug}` : "/roadmap"} />
+          <div className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</div>
+          {problem && (
+            <span
+              className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${getDifficultyBg(problem.difficulty)}`}
+            >
+              {problem.difficulty}
+            </span>
+          )}
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-3xl space-y-6 px-6 py-10">
+        <div>
+          {problem && currentTopic && (
+            <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-mono">{formatProblemNumber(problem.number)}</span>
+              <span>• {currentTopic.title}</span>
+            </div>
+          )}
+          <h1 className="text-2xl font-bold">{title}</h1>
+        </div>
+
+        <div className="rounded-2xl border border-dashed border-border bg-secondary/20 p-6">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <FlaskConical className="h-4 w-4 text-primary" />
+            No judge harness for this one yet
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Problems are given a proper harness one curriculum step at a time — a real method
+            signature, worked examples and hidden edge cases. This one has not been written yet, and
+            showing you a placeholder test that passes on the starter code would be worse than
+            showing nothing.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            You can still solve it on LeetCode or Codeforces below, and mark it done here.
+          </p>
+        </div>
+
+        <PracticeCard links={links} />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => toggleSolved(slug)}
+            className="flex items-center gap-2 rounded-xl border border-border bg-secondary/60 px-4 py-2 text-sm font-medium transition-all hover:bg-secondary"
+          >
+            {isSolved ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-easy" />
+                <span className="text-easy">Solved</span>
+              </>
+            ) : (
+              <>
+                <Circle className="h-4 w-4 text-muted-foreground" />
+                Mark as solved
+              </>
+            )}
+          </button>
+          <Link
+            href={currentStep ? `/roadmap/${currentStep.slug}` : "/roadmap"}
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Back to {currentStep?.title ?? "roadmap"}
+          </Link>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Prefer to hide these entirely? Settings → Curriculum → Hide problems without a judge
+          harness.
+        </p>
+      </main>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { PracticeLink } from "@/lib/types/practice"
+import type { PracticeLink } from "@/lib/types/practice"
 import { codeforcesPractice } from "@/lib/data/generated/codeforces-practice"
 import { curriculum } from "@/lib/data/curriculum"
 

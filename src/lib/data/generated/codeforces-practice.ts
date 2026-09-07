@@ -12,7 +12,7 @@
  * Source problems: 11378
  */
 
-import { PracticeLink } from "@/lib/types/practice"
+import type { PracticeLink } from "@/lib/types/practice"
 
 export const codeforcesPractice: Record<string, PracticeLink[]> = {
   "user-input-output": [
