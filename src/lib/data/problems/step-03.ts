@@ -1,4 +1,5 @@
 import type { ProblemMetadata } from "@/lib/types/judge"
+import { step03Easy } from "@/lib/data/problems/step-03-easy"
 
 /**
  * Step 3 — Arrays (partial).
@@ -8,7 +9,7 @@ import type { ProblemMetadata } from "@/lib/types/judge"
  * to the same standard as the rest rather than carried over as they were.
  * The remaining 31 problems in this step are still to be written.
  */
-export const step03: Record<string, ProblemMetadata> = {
+const core: Record<string, ProblemMetadata> = {
   "largest-element-array": {
     slug: "largest-element-array",
     title: "Largest Element in an Array",
@@ -417,4 +418,10 @@ class Solution {
       javaToolkit: ["Three-pointer partitioning", "In-place swap", "Dutch National Flag algorithm"],
     },
   },
+}
+
+/** Step 3 is authored in groups; this merges them for the registry and the gate. */
+export const step03: Record<string, ProblemMetadata> = {
+  ...step03Easy,
+  ...core,
 }
