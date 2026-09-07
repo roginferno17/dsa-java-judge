@@ -1,5 +1,6 @@
 import type { ProblemMetadata } from "@/lib/types/judge"
 import { step03Easy } from "@/lib/data/problems/step-03-easy"
+import { step03Medium } from "@/lib/data/problems/step-03-medium"
 
 /**
  * Step 3 — Arrays (partial).
@@ -423,5 +424,6 @@ class Solution {
 /** Step 3 is authored in groups; this merges them for the registry and the gate. */
 export const step03: Record<string, ProblemMetadata> = {
   ...step03Easy,
+  ...step03Medium,
   ...core,
 }
