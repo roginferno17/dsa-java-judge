@@ -54,7 +54,22 @@ const ratio = (solved: number, total: number): Progress => ({
   percentage: total > 0 ? Math.round((solved / total) * 100) : 0,
 })
 
-function browserTimeZone(): string {
+/**
+ * The zone used to decide where one day ends and the next begins.
+ *
+ * Read straight from persisted settings rather than through the settings store,
+ * so this module stays independent of it. Falls back to the browser zone.
+ */
+function activeTimeZone(): string {
+  try {
+    const raw = localStorage.getItem("dsa-java-judge-settings")
+    if (raw) {
+      const tz = JSON.parse(raw)?.state?.settings?.data?.timeZone
+      if (typeof tz === "string" && tz) return tz
+    }
+  } catch {
+    /* fall through to the browser zone */
+  }
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
   } catch {
@@ -92,7 +107,7 @@ async function recordEvent(
 
 /** Optimistic local update, then reconcile with whatever the server projects. */
 function applyEvent(
-  set: (fn: (s: ProgressState) => Partial<ProgressState>) => void,
+  set: (u: Partial<ProgressState> | ((s: ProgressState) => Partial<ProgressState>)) => void,
   type: "ATTEMPT" | "SOLVE" | "UNSOLVE",
   slug: string,
   optimistic: (current: ProblemProgress) => ProblemProgress,
@@ -106,13 +121,22 @@ function applyEvent(
     isSyncing: true,
   }))
 
-  void recordEvent(type, slug, verdict).then((problems) => {
+  void recordEvent(type, slug, verdict).then(async (problems) => {
     set(() => ({
       ...(problems ? { problems } : {}),
       isSyncing: false,
       isDiskSynced: problems !== null,
       lastSyncedAt: new Date().toISOString(),
     }))
+    // Refresh derived stats so the streak and heatmap react immediately.
+    if (problems) {
+      try {
+        const res = await fetch(`/api/events?tz=${encodeURIComponent(activeTimeZone())}`)
+        if (res.ok) set({ stats: (await res.json()).stats ?? null })
+      } catch {
+        /* the next full sync will pick it up */
+      }
+    }
   })
 }
 
@@ -128,7 +152,7 @@ export const useProgressStore = create<ProgressState>()(
       syncWithDisk: async () => {
         set({ isSyncing: true })
         try {
-          const res = await fetch(`/api/events?tz=${encodeURIComponent(browserTimeZone())}`)
+          const res = await fetch(`/api/events?tz=${encodeURIComponent(activeTimeZone())}`)
           if (!res.ok) {
             set({ isSyncing: false, isDiskSynced: false })
             return

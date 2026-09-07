@@ -12,6 +12,7 @@ import { curriculum, getStepProblemCount, getTotalProblemCount } from "@/lib/dat
 import { useProgressStore } from "@/lib/progress/store"
 import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
+import { StreakStrip } from "@/components/progress/streak-strip"
 
 const container = {
   hidden: { opacity: 0 },
@@ -89,24 +90,14 @@ export default function RoadmapPage() {
         </motion.div>
 
         {/* Overall Stats */}
+        {/* Streak, activity calendar and completion, derived from the activity log. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-12 grid grid-cols-3 gap-4"
+          className="mb-12"
         >
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-primary">18</div>
-            <div className="text-sm text-muted-foreground">Steps</div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-primary" suppressHydrationWarning>{solvedCount}/{totalProblems}</div>
-            <div className="text-sm text-muted-foreground">Solved</div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-easy" suppressHydrationWarning>{completionPercentage}%</div>
-            <div className="text-sm text-muted-foreground">Completed</div>
-          </div>
+          <StreakStrip totalProblems={totalProblems} />
         </motion.div>
 
         {/* Steps List */}
