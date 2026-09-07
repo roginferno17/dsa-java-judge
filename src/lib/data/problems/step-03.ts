@@ -1,5 +1,6 @@
 import type { ProblemMetadata } from "@/lib/types/judge"
 import { step03Easy } from "@/lib/data/problems/step-03-easy"
+import { step03Hard } from "@/lib/data/problems/step-03-hard"
 import { step03Medium } from "@/lib/data/problems/step-03-medium"
 
 /**
@@ -425,5 +426,6 @@ class Solution {
 export const step03: Record<string, ProblemMetadata> = {
   ...step03Easy,
   ...step03Medium,
+  ...step03Hard,
   ...core,
 }
