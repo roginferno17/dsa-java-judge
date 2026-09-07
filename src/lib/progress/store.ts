@@ -28,6 +28,14 @@ interface Progress {
   percentage: number
 }
 
+/** What an import actually did, so the UI can say something specific. */
+export interface ImportResult {
+  ok: boolean
+  imported: number
+  rejected: number
+  error?: string
+}
+
 export interface ProgressState {
   problems: Record<string, ProblemProgress>
   stats: ActivityStats | null
@@ -44,6 +52,7 @@ export interface ProgressState {
   getTopicProgress: (slugs: string[]) => Progress
   getOverallProgress: (totalProblems: number, knownSlugs?: string[]) => Progress
   clearProgress: (purgeHistory?: boolean) => Promise<void>
+  importProgress: (problems: Record<string, ProblemProgress>) => Promise<ImportResult>
 }
 
 const defaultProgress: ProblemProgress = { status: "NOT_STARTED", attempts: 0 }
@@ -243,6 +252,42 @@ export const useProgressStore = create<ProgressState>()(
         }
         set({ isSyncing: false, isDiskSynced: true, lastSyncedAt: new Date().toISOString() })
         await get().syncWithDisk()
+      },
+
+      /**
+       * Restore a backup. The server validates and sanitises the payload and
+       * mirrors it into the activity log, so the heatmap and streak stay
+       * consistent with the restored snapshot; we then re-read from disk rather
+       * than trusting what we sent.
+       */
+      importProgress: async (problems) => {
+        set({ isSyncing: true })
+        try {
+          const res = await fetch("/api/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ problems }),
+          })
+          const data = await res.json()
+          if (!res.ok) {
+            set({ isSyncing: false })
+            return { ok: false, imported: 0, rejected: 0, error: data?.error ?? "Import failed" }
+          }
+          await get().syncWithDisk()
+          return {
+            ok: true,
+            imported: data.totalProblemsTracked ?? 0,
+            rejected: data.rejectedEntries ?? 0,
+          }
+        } catch (error) {
+          set({ isSyncing: false })
+          return {
+            ok: false,
+            imported: 0,
+            rejected: 0,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        }
       },
     }),
     {

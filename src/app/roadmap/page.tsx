@@ -13,6 +13,7 @@ import { useProgressStore } from "@/lib/progress/store"
 import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { StreakStrip } from "@/components/progress/streak-strip"
+import { ProblemSearch } from "@/components/search/problem-search"
 
 const container = {
   hidden: { opacity: 0 },
@@ -98,6 +99,16 @@ export default function RoadmapPage() {
           className="mb-12"
         >
           <StreakStrip totalProblems={totalProblems} />
+        </motion.div>
+
+        {/* Search across every problem, plus a jump to the next unsolved one. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <ProblemSearch />
         </motion.div>
 
         {/* Steps List */}

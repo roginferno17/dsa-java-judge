@@ -1,6 +1,7 @@
 import { appendFile, mkdir, readFile, writeFile, rename } from "fs/promises"
 import { existsSync } from "fs"
 import { join } from "path"
+import { curriculum } from "@/lib/data/curriculum"
 
 /**
  * Append-only activity log.
@@ -159,12 +160,34 @@ export async function readSnapshot(): Promise<ProgressSnapshot> {
 
 const STATUSES: ProblemStatus[] = ["NOT_STARTED", "ATTEMPTED", "SOLVED"]
 
-/** Accept only well-formed records; the file is user-editable. */
-export function sanitizeProblems(input: unknown): Record<string, ProblemProgress> {
+/** Every slug the curriculum actually contains. */
+const CURRICULUM_SLUGS = new Set(
+  curriculum.flatMap((step) => step.topics.flatMap((t) => t.problems.map((p) => p.slug))),
+)
+
+export function knownCurriculumSlugs(): Set<string> {
+  return CURRICULUM_SLUGS
+}
+
+/**
+ * Accept only well-formed records; the file is user-editable.
+ *
+ * With `curriculumOnly`, slugs the curriculum does not contain are dropped as
+ * well. That is on for IMPORT — a backup from another fork, or a hand-edited
+ * file, would otherwise inflate the solved count with problems that do not
+ * exist — and off when reading the snapshot, where silently deleting whatever
+ * is already on disk would be worse than counting it.
+ */
+export function sanitizeProblems(
+  input: unknown,
+  curriculumOnly = false,
+): Record<string, ProblemProgress> {
   const out: Record<string, ProblemProgress> = {}
   if (!input || typeof input !== "object") return out
+  const known = curriculumOnly ? knownCurriculumSlugs() : null
   for (const [slug, value] of Object.entries(input as Record<string, unknown>)) {
     if (!isValidSlug(slug) || !value || typeof value !== "object") continue
+    if (known && !known.has(slug)) continue
     const v = value as Record<string, unknown>
     const status = STATUSES.includes(v.status as ProblemStatus)
       ? (v.status as ProblemStatus)

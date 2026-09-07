@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const problems = sanitizeProblems(body.problems)
+    // curriculumOnly: an import must not introduce slugs the curriculum has never
+    // heard of, or the solved count and the heatmap both drift.
+    const problems = sanitizeProblems(body.problems, true)
     const rejected = Object.keys(body.problems ?? {}).length - Object.keys(problems).length
 
     const now = new Date().toISOString()

@@ -6,6 +6,7 @@ import {
   RefreshCw,
   Trash2,
   Download,
+  Upload,
   ChevronDown,
   CheckCircle2,
   Database,
@@ -28,8 +29,12 @@ export function UserMenu() {
     lastSyncedAt,
     syncWithDisk,
     clearProgress,
+    importProgress,
     getOverallProgress,
   } = useProgressStore()
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
 
   const overall = getOverallProgress(totalProblems)
   const solvedCount = hydrated ? overall.solved : 0
@@ -62,7 +67,54 @@ export function UserMenu() {
     a.href = url
     a.download = `dsa-progress-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
-    URL.revokeObjectURL(url)
+    // Revoking synchronously can cancel the download in some browsers; the click
+    // has only been queued at this point.
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+  }
+
+  /**
+   * Restore a backup produced by Export. The server validates and sanitises the
+   * payload, so a hand-edited or foreign file cannot corrupt the snapshot -- it
+   * simply reports how many entries it rejected.
+   */
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""          // let the same file be chosen twice
+    if (!file) return
+
+    setImportMessage("Reading backup...")
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(await file.text())
+    } catch {
+      setImportMessage("That file is not valid JSON.")
+      return
+    }
+
+    const payload = parsed as { problems?: unknown }
+    if (!payload || typeof payload !== "object" || typeof payload.problems !== "object") {
+      setImportMessage("No 'problems' section in that file.")
+      return
+    }
+
+    if (
+      !window.confirm(
+        "Importing REPLACES your current progress with the backup. Continue?"
+      )
+    ) {
+      setImportMessage(null)
+      return
+    }
+
+    const result = await importProgress(payload.problems as Parameters<typeof importProgress>[0])
+    if (!result.ok) {
+      setImportMessage(result.error ?? "Import failed.")
+      return
+    }
+    setImportMessage(
+      `Imported ${result.imported} problems` +
+        (result.rejected > 0 ? `, skipped ${result.rejected} unrecognised entries.` : ".")
+    )
   }
 
   const handleReset = async () => {
@@ -205,6 +257,25 @@ export function UserMenu() {
                 <Download className="h-3.5 w-3.5 text-blue-400" />
                 Export Progress Backup (.json)
               </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSyncing}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+              >
+                <Upload className="h-3.5 w-3.5 text-blue-400" />
+                Import Progress Backup (.json)
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                onChange={handleImportFile}
+                className="hidden"
+              />
+              {importMessage && (
+                <p className="px-3 pb-1 text-[11px] text-muted-foreground">{importMessage}</p>
+              )}
 
               <button
                 onClick={handleReset}
