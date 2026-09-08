@@ -14,10 +14,12 @@
   --background: #09090b;
   --foreground: #fafafa;
 
-  --card: #09090b;
+  /* Deliberately a step above --background: the layout leans on cards, and when
+     the two match, a card is carried by nothing but its 1px border. */
+  --card: #131316;
   --card-foreground: #fafafa;
 
-  --popover: #09090b;
+  --popover: #17171a;
   --popover-foreground: #fafafa;
 
   --primary: #3b82f6;
@@ -58,7 +60,8 @@
 
 /* ---------- Light ---------- */
 [data-theme="light"] {
-  --background: #ffffff;
+  /* Inverse of the dark treatment: tint the page so the white cards lift off it. */
+  --background: #fafafa;
   --foreground: #09090b;
 
   --card: #ffffff;

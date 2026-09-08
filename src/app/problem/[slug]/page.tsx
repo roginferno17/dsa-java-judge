@@ -125,7 +125,16 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
   const hydrated = useHydrated()
 
   const settings = useSettingsStore((s) => s.settings)
-  const [mode, setMode] = useState<Mode>("test")
+  // Settings -> Editor -> "Default mode when opening a problem".
+  //
+  // Derived rather than seeded into useState: the server renders before the
+  // persisted settings exist, so initialising state from them would render
+  // "test" on the server and "learn" on the client. Falling back to the setting
+  // only once a tab has NOT been clicked keeps SSR and the client in agreement,
+  // and the moment the user picks a tab their choice wins for the rest of the visit.
+  const [chosenMode, setChosenMode] = useState<Mode | null>(null)
+  const mode: Mode = chosenMode ?? (hydrated ? settings.editor.defaultMode : "test")
+  const setMode = setChosenMode
 
   // Ctrl on Windows/Linux, Cmd on macOS. Resolved after hydration so the server
   // and client render the same thing.
