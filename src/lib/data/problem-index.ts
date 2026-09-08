@@ -122,3 +122,51 @@ export function nextUnsolved(
 ): IndexedProblem | null {
   return problemIndex.find((row) => statusOf(row.slug) !== "SOLVED") ?? null
 }
+
+export interface ResumeTarget {
+  row: IndexedProblem
+  /**
+   * resume — you were part-way through this one when you stopped.
+   * next   — nothing left half-finished, so this is the next one to start.
+   * start  — nothing tracked at all; this is the very first problem.
+   */
+  reason: "resume" | "next" | "start"
+}
+
+interface ProgressLike {
+  status: "NOT_STARTED" | "ATTEMPTED" | "SOLVED"
+  lastAttemptAt?: string
+}
+
+/**
+ * Where "Continue" should take you.
+ *
+ * Preference order, and the reasoning behind it:
+ *
+ *   1. The problem you touched most recently that you have NOT solved. This is
+ *      almost always what "where I left off" means — you were mid-problem when
+ *      you stopped.
+ *   2. Otherwise the first unsolved problem in curriculum order, because
+ *      everything you have started is finished and the sheet is meant to be
+ *      worked in order.
+ *   3. Otherwise the very first problem, for a fresh install.
+ *
+ * Timestamps are compared as ISO strings, which sort correctly without parsing.
+ */
+export function resumeTarget(problems: Record<string, ProgressLike>): ResumeTarget | null {
+  let best: { row: IndexedProblem; at: string } | null = null
+
+  for (const row of problemIndex) {
+    const p = problems[row.slug]
+    if (!p || p.status === "SOLVED" || !p.lastAttemptAt) continue
+    if (!best || p.lastAttemptAt > best.at) best = { row, at: p.lastAttemptAt }
+  }
+  if (best) return { row: best.row, reason: "resume" }
+
+  const statusOf = (slug: string) => problems[slug]?.status ?? "NOT_STARTED"
+  const next = nextUnsolved(statusOf)
+  if (!next) return null              // everything solved
+
+  const touchedAnything = Object.keys(problems).length > 0
+  return { row: next, reason: touchedAnything ? "next" : "start" }
+}

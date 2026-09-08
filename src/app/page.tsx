@@ -12,7 +12,8 @@ import {
   ChevronRight,
 } from "lucide-react"
 import Link from "next/link"
-import { UserMenu } from "@/components/layout/user-menu"
+import { NavActions } from "@/components/layout/nav-actions"
+import { ContinueButton } from "@/components/layout/continue-button"
 import { curriculum, getTotalProblemCount } from "@/lib/data/curriculum"
 
 // Derived, not hardcoded: this used to read "474" while the header showed the
@@ -117,7 +118,7 @@ export default function Home() {
             >
               Java syntax
             </Link>
-            <UserMenu />
+            <NavActions />
             <Link
               href="/roadmap"
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -161,15 +162,7 @@ export default function Home() {
                 Begin Your Journey
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
-              <a
-                href="https://takeuforward.org/dsa/strivers-a2z-sheet-learn-dsa-a-to-z"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-8 py-3 text-base font-semibold transition-colors hover:bg-secondary/80"
-              >
-                View Original Sheet
-                <ChevronRight className="h-5 w-5" />
-              </a>
+              <ContinueButton />
             </div>
           </motion.div>
 

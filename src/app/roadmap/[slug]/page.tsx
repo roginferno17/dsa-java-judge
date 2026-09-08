@@ -14,7 +14,7 @@ import Link from "next/link"
 import { curriculum, getStepProblemCount } from "@/lib/data/curriculum"
 import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/layout/user-menu"
+import { NavActions } from "@/components/layout/nav-actions"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { useSettingsStore } from "@/lib/settings/store"
 
@@ -98,7 +98,7 @@ export default function StepPage({
             <div className="hidden text-sm text-muted-foreground sm:block">
               Step {step.stepNumber} / 18
             </div>
-            <UserMenu />
+            <NavActions />
           </div>
         </div>
       </nav>

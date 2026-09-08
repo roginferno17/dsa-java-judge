@@ -11,7 +11,7 @@ import {
 import Link from "next/link"
 import { curriculum, getStepProblemCount, getTotalProblemCount } from "@/lib/data/curriculum"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/layout/user-menu"
+import { NavActions } from "@/components/layout/nav-actions"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { StreakStrip } from "@/components/progress/streak-strip"
 import { ProblemSearch } from "@/components/search/problem-search"
@@ -64,7 +64,7 @@ export default function RoadmapPage() {
             <div className="hidden text-sm text-muted-foreground sm:block" suppressHydrationWarning>
               {solvedCount}/{totalProblems} solved • {completionPercentage}% complete
             </div>
-            <UserMenu />
+            <NavActions />
           </div>
         </div>
       </nav>

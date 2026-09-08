@@ -35,6 +35,7 @@ import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
 import { ResizablePanel, VerticalResizablePanel } from "@/components/ui/resizable-panel"
 import { BackButton } from "@/components/layout/back-button"
+import { SettingsLink } from "@/components/layout/nav-actions"
 import { getProblemMetadata } from "@/lib/data/problem-metadata"
 import {
   ProblemLearnContent,
@@ -852,6 +853,7 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
         </div>
 
         <div className="z-10 ml-auto flex flex-shrink-0 items-center gap-2 pl-4">
+          <SettingsLink compact />
           <Link
             href={nextHref}
             title={nextProblem ? `Next: ${nextProblem.title}` : "Finish step"}

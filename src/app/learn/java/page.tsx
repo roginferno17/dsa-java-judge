@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, ChevronRight, Code2, Coffee, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import { javaGuide } from "@/lib/data/java-guide"
-import { UserMenu } from "@/components/layout/user-menu"
+import { NavActions } from "@/components/layout/nav-actions"
 
 const container = {
   hidden: { opacity: 0 },
@@ -35,7 +35,7 @@ export default function JavaGuideIndex() {
               <span className="text-lg font-bold">DSA Java Judge</span>
             </div>
           </div>
-          <UserMenu />
+          <NavActions />
         </div>
       </nav>
 

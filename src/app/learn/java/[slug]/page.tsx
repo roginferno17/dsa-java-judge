@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { javaGuide, getJavaLesson } from "@/lib/data/java-guide"
 import { RunnableSnippet } from "@/components/learn/runnable-snippet"
-import { UserMenu } from "@/components/layout/user-menu"
+import { NavActions } from "@/components/layout/nav-actions"
 import { BackButton } from "@/components/layout/back-button"
 
 export default function JavaLessonPage() {
@@ -55,7 +55,7 @@ export default function JavaLessonPage() {
             <span className="hidden text-sm text-muted-foreground sm:block">
               {index + 1} / {javaGuide.length}
             </span>
-            <UserMenu />
+            <NavActions />
           </div>
         </div>
       </nav>
