@@ -425,6 +425,10 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             </div>
           </div>
 
+          {/* Above the examples on purpose. At the bottom of this panel it sat
+              roughly 1900px down and nobody ever scrolled to it. */}
+          <PracticeCard links={practiceLinks} />
+
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <ListFilter className="h-4 w-4 text-primary" /> Examples
@@ -494,8 +498,6 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
               ))}
             </ul>
           </div>
-
-          <PracticeCard links={practiceLinks} />
         </div>
       )}
     </div>
