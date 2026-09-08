@@ -603,16 +603,9 @@ export default function SettingsPage() {
           description="What shows up on the roadmap."
         >
           <Row
-            label="Hide problems without a judge harness"
-            hint="Useful while the full problem set is still being written."
+            label="Default difficulty filter"
+            hint="Applied on every step page; change it there and it is remembered here."
           >
-            <Toggle
-              label="Hide problems without a judge harness"
-              checked={c.hideUnauthored}
-              onChange={(hideUnauthored) => update({ curriculum: { hideUnauthored } })}
-            />
-          </Row>
-          <Row label="Default difficulty filter">
             <Choice
               value={c.difficultyFilter}
               onChange={(difficultyFilter) => update({ curriculum: { difficultyFilter } })}

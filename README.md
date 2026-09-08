@@ -24,6 +24,7 @@
 
 <!-- Quick Navigation Matrix -->
 <p align="center">
+  <a href="#-reading-this-on-the-judge-fixes-branch"><b>👋 Start Here</b></a> •
   <a href="#-getting-started"><b>🚀 Getting Started</b></a> •
   <a href="#-key-features"><b>🌟 Features</b></a> •
   <a href="#-execution-engine--architecture"><b>⚙️ Execution Engine</b></a> •
@@ -33,6 +34,67 @@
 </p>
 
 </div>
+
+---
+
+## 👋 Reading this on the `judge-fixes` branch
+
+Hi Vishu. This branch is a large pass over the whole project. It is **not merged into `main`** —
+that is your call, and nothing here touches the repo's settings or collaborators.
+
+**The short version of why it exists:** the judge was giving wrong verdicts, and 386 of the 398
+problems were placeholders. Both are fixed.
+
+| | Before | Now |
+| :-- | :-- | :-- |
+| Problems with a real statement and tests | 12 | **398** |
+| Reference solutions | 0 | **398**, committed and run by the gate |
+| `void` in-place problems (`sortColors`, `rotate`, `merge`) | impossible to pass | fixed |
+| Returning `char[]`, `TreeNode`, `List<String>`… | always marked wrong | fixed |
+| `System.out.println` while debugging | turned a pass into a runtime error | captured in a Console tab |
+| Light mode | unreachable in any stylesheet | works |
+
+### Trying it
+
+```bash
+git checkout judge-fixes
+npm install          # five unused packages were removed; node_modules will be stale
+npm run dev
+```
+
+Your progress is safe — see *Upgrading an existing checkout* below. `user_data/` is no longer
+tracked by git, so we stop clobbering each other's progress on every pull.
+
+### Checking it rather than trusting it
+
+Nothing here asks to be taken on faith. Every claim above has a script behind it:
+
+```bash
+bash scripts/driver-smoke.sh                                            # 19 harness tests, no server
+node --import ./scripts/register-alias.mjs scripts/events-smoke.mjs     # 17 streak/log tests
+npm run dev                                                             # the two below need this
+node --import ./scripts/register-alias.mjs scripts/judge-smoke.mjs      # 13 end-to-end judge tests
+node --import ./scripts/register-alias.mjs scripts/verify-step.mjs 13   # any step, 01 to 18
+node --import ./scripts/register-alias.mjs scripts/verify-java-guide.mjs
+```
+
+`verify-step.mjs` is the one worth understanding. Per problem it requires the **starter code to
+compile AND fail its own tests** — a green run on untouched starter code would mean the test proves
+nothing — and the committed reference solution to pass every sample and hidden case. No step shipped
+until it passed.
+
+Expected outputs were also computed by brute force **independently of the reference solution**,
+before that solution was written, because otherwise a wrong solution and a wrong expected value
+agree with each other. That caught real mistakes: a Dijkstra distance, a diagonal grid path with no
+three-cell route, a BST test case that no single two-value swap could produce, and a jump-game input
+that violated the problem's own reachability guarantee.
+
+### Where to look first
+
+- `src/lib/executor/sandbox.ts` and `src/lib/executor/java/__Driver__.java` — the judge fixes.
+- `src/lib/data/problems/` — the 398 problems, one module per step.
+- `scripts/verify-step.mjs` — the gate.
+- `src/app/learn/java/` — the Java syntax track, if you want the language side first.
 
 ---
 

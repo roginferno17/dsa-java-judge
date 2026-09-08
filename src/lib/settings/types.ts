@@ -68,8 +68,7 @@ export interface PracticeSettings {
 }
 
 export interface CurriculumSettings {
-  /** Hide problems that have no judge harness yet. */
-  hideUnauthored: boolean
+  /** Applied on the step pages; "ALL" shows everything. */
   difficultyFilter: "ALL" | "EASY" | "MEDIUM" | "HARD"
 }
 
@@ -125,7 +124,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     showPracticeLinks: true,
   },
   curriculum: {
-    hideUnauthored: false,
     difficultyFilter: "ALL",
   },
   data: {
@@ -228,7 +226,6 @@ export function sanitizeSettings(input: unknown): AppSettings {
       showPracticeLinks: bool(p.showPracticeLinks, d.practice.showPracticeLinks),
     },
     curriculum: {
-      hideUnauthored: bool(c.hideUnauthored, d.curriculum.hideUnauthored),
       difficultyFilter: oneOf(
         c.difficultyFilter,
         ["ALL", "EASY", "MEDIUM", "HARD"] as const,
