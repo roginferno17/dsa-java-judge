@@ -24,7 +24,7 @@
 
 <!-- Quick Navigation Matrix -->
 <p align="center">
-  <a href="#-reading-this-on-the-judge-fixes-branch"><b>👋 Start Here</b></a> •
+  <a href="#-start-here--what-just-changed"><b>👋 Start Here</b></a> •
   <a href="#-getting-started"><b>🚀 Getting Started</b></a> •
   <a href="#-key-features"><b>🌟 Features</b></a> •
   <a href="#-execution-engine--architecture"><b>⚙️ Execution Engine</b></a> •
@@ -37,13 +37,14 @@
 
 ---
 
-## 👋 Reading this on the `judge-fixes` branch
+## 👋 Start here — what just changed
 
-Hi Vishu. This branch is a large pass over the whole project. It is **not merged into `main`** —
-that is your call, and nothing here touches the repo's settings or collaborators.
+Hi Vishu. The project has had a large pass over it, merged into `main` as a single commit
+(`Merge judge-fixes`). If anything looks wrong, `git revert -m 1 <that commit>` undoes all of it in
+one step.
 
-**The short version of why it exists:** the judge was giving wrong verdicts, and 386 of the 398
-problems were placeholders. Both are fixed.
+**The short version:** the judge was giving wrong verdicts, and 386 of the 398 problems were
+placeholders. Both are fixed.
 
 | | Before | Now |
 | :-- | :-- | :-- |
@@ -54,10 +55,10 @@ problems were placeholders. Both are fixed.
 | `System.out.println` while debugging | turned a pass into a runtime error | captured in a Console tab |
 | Light mode | unreachable in any stylesheet | works |
 
-### Trying it
+### After pulling
 
 ```bash
-git checkout judge-fixes
+git pull
 npm install          # five unused packages were removed; node_modules will be stale
 npm run dev
 ```
