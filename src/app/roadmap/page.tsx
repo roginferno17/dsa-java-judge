@@ -7,6 +7,7 @@ import {
   Code2,
   ArrowLeft,
   Coffee,
+  NotebookPen,
 } from "lucide-react"
 import Link from "next/link"
 import { curriculum, getStepProblemCount, getTotalProblemCount } from "@/lib/data/curriculum"
@@ -110,6 +111,34 @@ export default function RoadmapPage() {
           className="mb-8"
         >
           <ProblemSearch />
+        </motion.div>
+
+        {/* Notes are stored per problem, so a collected view is the only way to
+            read them back. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.17 }}
+          className="mb-8"
+        >
+          <Link
+            href="/notes"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/50"
+          >
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <NotebookPen className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Your Notes</h2>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Everything you have written, with the problem and the date. Export it all as one
+                Markdown file.
+              </p>
+            </div>
+          </Link>
         </motion.div>
 
         {/* The Java track sits before the problems for anyone still learning the

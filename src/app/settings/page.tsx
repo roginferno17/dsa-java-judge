@@ -16,6 +16,7 @@ import {
   Trash2,
   Check,
   Loader2,
+  NotebookPen,
 } from "lucide-react"
 import { BackButton } from "@/components/layout/back-button"
 import { useSettingsStore } from "@/lib/settings/store"
@@ -625,6 +626,18 @@ export default function SettingsPage() {
           title="Progress data"
           description="Your activity log lives in user_data/ and never leaves this machine."
         >
+          <Row
+            label="Your notes"
+            hint="Notes are kept per problem. This is where all of them are collected, with dates."
+          >
+            <Link
+              href="/notes"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-sm transition-colors hover:border-primary/40"
+            >
+              <NotebookPen className="h-3.5 w-3.5 text-primary" />
+              Open notes
+            </Link>
+          </Row>
           <Row
             label="Time zone"
             hint="Defines where one day ends and the next begins for your streak."

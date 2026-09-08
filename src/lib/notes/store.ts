@@ -2,8 +2,13 @@ import { create } from "zustand"
 
 export type NoteSaveState = "idle" | "dirty" | "saving" | "saved" | "error"
 
+/** When each note was last written. Kept alongside the text so the overview
+ *  page can say when a thought was had, which is most of its context. */
+export type NoteTimestamps = Record<string, string>
+
 interface NotesState {
   notes: Record<string, string>
+  updatedAt: NoteTimestamps
   loaded: boolean
   saveState: NoteSaveState
   /** Slugs whose last write failed, so the UI can say which. */
@@ -39,6 +44,7 @@ async function persist(slug: string, text: string): Promise<void> {
 
 export const useNotesStore = create<NotesState>()((set, get) => ({
   notes: {},
+  updatedAt: {},
   loaded: false,
   saveState: "idle",
   lastError: null,
@@ -52,12 +58,15 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
         return
       }
       const data = await res.json()
-      const raw = (data?.notes ?? {}) as Record<string, { text?: string }>
+      const raw = (data?.notes ?? {}) as Record<string, { text?: string; updatedAt?: string }>
       const notes: Record<string, string> = {}
+      const updatedAt: NoteTimestamps = {}
       for (const [slug, note] of Object.entries(raw)) {
-        if (typeof note?.text === "string") notes[slug] = note.text
+        if (typeof note?.text !== "string") continue
+        notes[slug] = note.text
+        if (typeof note.updatedAt === "string") updatedAt[slug] = note.updatedAt
       }
-      set({ notes, loaded: true })
+      set({ notes, updatedAt, loaded: true })
     } catch {
       // Offline or the route is down: keep whatever is in memory and carry on.
       set({ loaded: true })
@@ -81,7 +90,12 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     set({ saveState: "saving" })
     try {
       await persist(slug, text)
-      set({ saveState: "saved", lastError: null })
+      set((st) => {
+        const stamps = { ...st.updatedAt }
+        if (text.trim().length === 0) delete stamps[slug]
+        else stamps[slug] = new Date().toISOString()
+        return { saveState: "saved", lastError: null, updatedAt: stamps }
+      })
     } catch (error) {
       set({
         saveState: "error",
