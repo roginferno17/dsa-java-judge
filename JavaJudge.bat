@@ -43,7 +43,7 @@ echo [*] Checking Node.js runtime...
 where node >nul 2>nul
 if errorlevel 1 (
     echo.
-    echo [!] ERROR: Node.js was not found on your PATH.
+    echo [^^!] ERROR: Node.js was not found on your PATH.
     echo [*] Install it from https://nodejs.org/ ^(LTS^), then reopen this window.
     echo.
     pause
@@ -56,7 +56,7 @@ echo [*] Checking Java Development Kit...
 where javac >nul 2>nul
 if errorlevel 1 (
     echo.
-    echo [!] ERROR: The Java compiler ^(javac^) was not found on your PATH.
+    echo [^^!] ERROR: The Java compiler ^(javac^) was not found on your PATH.
     echo [*] The judge compiles and runs your solutions locally, so a JDK is required.
     echo [*] Install OpenJDK 17 or newer from https://adoptium.net/
     echo.
@@ -76,7 +76,7 @@ if not exist "node_modules" (
     echo [*] Dependencies not found. Running npm install...
     call npm install
     if errorlevel 1 (
-        echo [!] Failed to install dependencies.
+        echo [^^!] Failed to install dependencies.
         pause
         exit /b 1
     )

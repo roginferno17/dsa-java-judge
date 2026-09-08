@@ -146,6 +146,46 @@ The app opens at `http://localhost:3000`.
 > The launcher checks Node and the JDK, frees port 3000 if a previous run is stuck on it, starts the
 > dev server bound to `127.0.0.1`, and opens your browser once it responds.
 
+### Optional: a `dsa` command you can type anywhere
+
+Run this once, from the repo:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\install-command.ps1
+```
+
+Then, from any folder in any terminal:
+
+| | |
+| :-- | :-- |
+| `dsa` | start it — or just open the browser if it is already running |
+| `dsa here` | run in the current terminal so you can see the logs; Ctrl+C stops it |
+| `dsa stop` | stop a server left running in the background |
+| `dsa help` | the above, plus the repo path and port in use |
+
+`dsa` on an already-running server takes about half a second and does not restart it, so it is
+safe to type whenever you want the app in front of you.
+
+<details>
+<summary><b>What the installer touches</b></summary>
+
+<br/>
+
+Three things, none of them needing admin rights:
+
+1. Creates `%USERPROFILE%in` if it does not exist.
+2. Writes a two-line `dsa.cmd` there that calls `scripts\dsa.cmd` in this repo.
+3. Adds `%USERPROFILE%in` to your **user** `Path` if it is not already there.
+
+It does not touch the system-wide `Path` and installs nothing. The shim is deliberately thin — the
+real logic lives in `scripts/dsa.cmd` inside the repo, so `git pull` updates the command and you
+never rerun the installer.
+
+To undo: delete `%USERPROFILE%in\dsa.cmd`, and remove that folder from your `Path` in the
+environment-variables dialog.
+
+</details>
+
 ---
 
 ## 🔄 Upgrading an existing checkout
