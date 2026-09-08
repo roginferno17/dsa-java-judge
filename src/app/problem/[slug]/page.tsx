@@ -428,6 +428,20 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             )}
           </div>
 
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Constraints
+            </h3>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {constraints.map((c, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div className="rounded-xl border border-border bg-secondary/30 p-4">
             <div className="font-mono text-xs text-primary">
               {"// Method signature:"}
@@ -511,20 +525,6 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
           </div>
 
           <PracticeCard links={practiceLinks} leetcodeTopic={leetcodeTopic} />
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Constraints
-            </h3>
-            <ul className="space-y-1 text-xs text-muted-foreground">
-              {constraints.map((c, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  {c}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       )}
     </div>
