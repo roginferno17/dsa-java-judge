@@ -300,6 +300,7 @@ while v5 was installed. The app was always fully local.
           </ul>
         </li>
         <li><b>Search across all 398</b> with <kbd>Ctrl</kbd>+<kbd>K</kbd>, filtered by difficulty and status.</li>
+        <li><b>Practice links</b>: 284 of 398 carry a verified LeetCode link, plus Codeforces suggestions by topic.</li>
         <li><b>One-click completion toggles</b> with live progress.</li>
       </ul>
     </td>
@@ -483,6 +484,19 @@ node --import ./scripts/register-alias.mjs scripts/verify-step.mjs 01
 # Every snippet in the Java track compiles, runs, and prints what the page claims
 node --import ./scripts/register-alias.mjs scripts/verify-java-guide.mjs
 ```
+
+Practice links are generated, not hand-maintained. Both scripts run once and write a committed
+file; the app never contacts either site at runtime.
+
+```bash
+node scripts/fetch-leetcode.mjs --refresh      # validates every slug against LeetCode's catalogue
+node scripts/fetch-codeforces.mjs --refresh    # top-rated problems per topic, by tag
+```
+
+`src/lib/data/leetcode-map.ts` holds only *curriculum slug → LeetCode slug*. Titles, difficulties
+and Premium status come from LeetCode's own catalogue, so a title cannot drift from the real
+problem, a slug that does not exist fails the build rather than shipping a dead link, and
+paywalled problems are reported and dropped.
 
 ### Project structure
 
