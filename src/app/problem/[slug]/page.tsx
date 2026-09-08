@@ -47,7 +47,7 @@ import { useHydrated } from "@/lib/hooks/use-hydrated"
 import { useCodeDraft } from "@/lib/hooks/use-code-draft"
 import { PracticeCard } from "@/components/practice/practice-card"
 import { ProblemNotes } from "@/components/notes/problem-notes"
-import { getPracticeLinks } from "@/lib/data/practice"
+import { getPracticeLinks, getLeetCodeTopicFallback } from "@/lib/data/practice"
 import { useSettingsStore } from "@/lib/settings/store"
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -153,7 +153,16 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
   const [isRunning, setIsRunning] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<ExecutionResult | null>(null)
-  const [expandedExample, setExpandedExample] = useState<number | null>(1)
+  // A set rather than a single index: examples open and close independently, so
+  // you can read two side by side instead of one closing the other.
+  const [openExamples, setOpenExamples] = useState<Set<number>>(() => new Set([1]))
+  const toggleExample = (n: number) =>
+    setOpenExamples((prev) => {
+      const next = new Set(prev)
+      if (next.has(n)) next.delete(n)
+      else next.add(n)
+      return next
+    })
   const [selectedTab, setSelectedTab] = useState(0)
   const [resultTab, setResultTab] = useState<ResultTab>("cases")
   const [failedSubmits, setFailedSubmits] = useState(0)
@@ -175,6 +184,8 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
       }),
     [slug, settings.practice.cfRatingMin, settings.practice.cfRatingMax]
   )
+
+  const leetcodeTopic = useMemo(() => getLeetCodeTopicFallback(slug), [slug])
 
   const { currentStep, currentTopic, problem } = findInCurriculum(slug)
 
@@ -391,7 +402,7 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             </pre>
           </div>
 
-          <PracticeCard links={practiceLinks} />
+          <PracticeCard links={practiceLinks} leetcodeTopic={leetcodeTopic} />
         </div>
       ) : (
         <div className="space-y-6">
@@ -425,32 +436,46 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
             </div>
           </div>
 
-          {/* Above the examples on purpose. At the bottom of this panel it sat
-              roughly 1900px down and nobody ever scrolled to it. */}
-          <PracticeCard links={practiceLinks} />
-
           <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <ListFilter className="h-4 w-4 text-primary" /> Examples
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <ListFilter className="h-4 w-4 text-primary" /> Examples
+              </h3>
+              {metadata.sampleTestCases.length > 1 && (
+                <button
+                  onClick={() =>
+                    setOpenExamples((prev) =>
+                      prev.size === metadata.sampleTestCases.length
+                        ? new Set()
+                        : new Set(metadata.sampleTestCases.map((_, i) => i + 1)),
+                    )
+                  }
+                  className="rounded-lg border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {openExamples.size === metadata.sampleTestCases.length
+                    ? "Collapse all"
+                    : "Expand all"}
+                </button>
+              )}
+            </div>
             {metadata.sampleTestCases.map((example, idx) => (
               <div
                 key={idx}
                 className="overflow-hidden rounded-xl border border-border bg-background"
               >
                 <button
-                  onClick={() => setExpandedExample(expandedExample === idx + 1 ? null : idx + 1)}
+                  onClick={() => toggleExample(idx + 1)}
                   className="flex w-full items-center justify-between p-3 text-xs font-medium transition-colors hover:bg-secondary/30"
                 >
                   <span>Example {idx + 1}</span>
-                  {expandedExample === idx + 1 ? (
+                  {openExamples.has(idx + 1) ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
                 <AnimatePresence>
-                  {expandedExample === idx + 1 && (
+                  {openExamples.has(idx + 1) && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
@@ -484,6 +509,8 @@ function AuthoredWorkspace({ slug, metadata }: { slug: string; metadata: Problem
               </div>
             ))}
           </div>
+
+          <PracticeCard links={practiceLinks} leetcodeTopic={leetcodeTopic} />
 
           <div className="space-y-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

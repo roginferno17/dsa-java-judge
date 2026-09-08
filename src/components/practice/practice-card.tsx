@@ -44,9 +44,12 @@ function openInTab(url: string) {
 export function PracticeCard({
   links,
   className = "",
+  leetcodeTopic = null,
 }: {
   links: PracticeLink[]
   className?: string
+  /** Shown only when the problem has no direct LeetCode match. */
+  leetcodeTopic?: { url: string; label: string } | null
 }) {
   const showPracticeLinks = useSettingsStore((s) => s.settings.practice.showPracticeLinks)
   const openMode = useSettingsStore((s) => s.settings.practice.codeforcesOpenMode)
@@ -54,7 +57,7 @@ export function PracticeCard({
   const [asking, setAsking] = useState<PracticeLink | null>(null)
   const [remember, setRemember] = useState(false)
 
-  if (!showPracticeLinks || links.length === 0) return null
+  if (!showPracticeLinks || (links.length === 0 && !leetcodeTopic)) return null
 
   const handle = (e: React.MouseEvent, link: PracticeLink) => {
     // LeetCode always just follows the link; only Codeforces is configurable.
@@ -122,6 +125,29 @@ export function PracticeCard({
             </ul>
           </div>
         ))}
+
+        {/* Only rendered when there is no direct match, so it never sits beside
+            a real LeetCode link. Saying so beats an absent section, which reads
+            as a broken feature rather than an accurate answer. */}
+        {leetcodeTopic && (
+          <div>
+            <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">LeetCode</div>
+            <a
+              href={leetcodeTopic.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-start gap-2 rounded-lg border border-dashed border-border/60 bg-background px-2.5 py-2 transition-colors hover:border-primary/40"
+            >
+              <span className="min-w-0 flex-1 text-xs leading-snug text-muted-foreground group-hover:text-primary">
+                No direct LeetCode equivalent for this one.
+                <span className="mt-0.5 block text-[10px] leading-snug">
+                  Browse all {leetcodeTopic.label} problems on LeetCode instead.
+                </span>
+              </span>
+              <SquareArrowOutUpRight className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </a>
+          </div>
+        )}
       </div>
 
       {/* "Ask each time" dialog */}
