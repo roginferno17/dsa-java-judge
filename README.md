@@ -186,6 +186,38 @@ environment-variables dialog.
 
 </details>
 
+### Optional: run it as a desktop app
+
+Its own window, its own taskbar icon, no address bar and no terminal behind it.
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts\install-desktop-app.ps1
+```
+
+That puts **DSA Java Judge** on your Desktop and in the Start Menu. The shortcut starts the server
+if it is not already running, opens the app in its own window, and stops the server again when you
+close it.
+
+For the real thing — a proper Windows app entry rather than a shortcut — open it once and use your
+browser's **Install DSA Java Judge** (Chrome: the install icon in the address bar, or ⋮ → *Cast, save
+and share* → *Install page as app*). The repo ships a web manifest, so this registers it with
+Windows properly.
+
+<details>
+<summary><b>Why not Electron?</b></summary>
+
+<br/>
+
+Electron would add roughly **250 MB** to `node_modules` to ship a second copy of Chromium — and it
+still would not make the app standalone, because the judge needs Node and a JDK on the machine
+either way. Chromium's `--app` mode gives an identical window for nothing.
+
+If you ever want a genuinely distributable `.exe` — one that installs on a machine with no Node and
+no JDK — that is a real packaging project (bundling a JRE and a Node runtime), not a flag. Worth
+doing only if this ever leaves your two machines.
+
+</details>
+
 ---
 
 ## 🔄 Upgrading an existing checkout
@@ -512,6 +544,8 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <br/>
 
-<sub>Crafted with passion by <a href="https://github.com/roginferno17"><b>Vishu Khajuria (roginferno17)</b></a></sub>
+<sub>Built by <a href="https://github.com/roginferno17"><b>Vishu Khajuria (roginferno17)</b></a> and <a href="https://github.com/ParasWadkar"><b>Paras Wadkar (ParasWadkar)</b></a></sub>
+
+<sub>Two people learning Java and DSA together, and building the tool they wanted to learn it with.</sub>
 
 </div>
