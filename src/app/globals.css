@@ -1,99 +1,155 @@
 @import "tailwindcss";
 
 /* ============================================================
-   CSS CUSTOM PROPERTIES — Dark Mode Default
+   THEME TOKENS
+
+   Every colour in the app resolves through these variables, so a theme is
+   just a different set of values. Presets are selected with a data-theme
+   attribute on <html>; the "custom" theme supplies its own values inline
+   from user settings.
+
+   :root holds the dark palette, which is also the default.
    ============================================================ */
 :root {
-  /* Background & Foreground */
   --background: #09090b;
   --foreground: #fafafa;
 
-  /* Card */
   --card: #09090b;
   --card-foreground: #fafafa;
 
-  /* Popover */
   --popover: #09090b;
   --popover-foreground: #fafafa;
 
-  /* Primary */
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
 
-  /* Secondary */
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
 
-  /* Muted */
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
 
-  /* Accent */
   --accent: #27272a;
   --accent-foreground: #fafafa;
 
-  /* Destructive */
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
 
-  /* Border */
   --border: #27272a;
-
-  /* Input */
   --input: #27272a;
-
-  /* Ring */
   --ring: #3b82f6;
 
-  /* Difficulty Colors */
+  /* Difficulty */
   --easy: #22c55e;
   --medium: #f59e0b;
   --hard: #ef4444;
 
-  /* Code Editor */
+  /* Editor surface */
   --editor-bg: #1e1e1e;
   --editor-line: #2d2d2d;
 
-  /* Border Radius */
+  /* Chrome that used to be hardcoded, and so ignored the theme */
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-thumb-hover: #52525b;
+  --selection-bg: rgba(59, 130, 246, 0.35);
+
   --radius: 0.5rem;
 }
 
-/* Light mode overrides */
-.light {
+/* ---------- Light ---------- */
+[data-theme="light"] {
   --background: #ffffff;
   --foreground: #09090b;
+
   --card: #ffffff;
   --card-foreground: #09090b;
+
   --popover: #ffffff;
   --popover-foreground: #09090b;
+
   --primary: #2563eb;
   --primary-foreground: #ffffff;
+
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
+
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: #52525b;
+
   --accent: #f4f4f5;
   --accent-foreground: #18181b;
+
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
+
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #2563eb;
-  --easy: #16a34a;
-  --medium: #d97706;
+
+  --easy: #15803d;
+  --medium: #b45309;
   --hard: #dc2626;
+
   --editor-bg: #ffffff;
-  --editor-line: #f5f5f5;
+  --editor-line: #f4f4f5;
+
+  --scrollbar-thumb: #d4d4d8;
+  --scrollbar-thumb-hover: #a1a1aa;
+  --selection-bg: rgba(37, 99, 235, 0.22);
+}
+
+/* ---------- Blue ---------- */
+[data-theme="blue"] {
+  --background: #0b1220;
+  --foreground: #e8f0fe;
+
+  --card: #101a2e;
+  --card-foreground: #e8f0fe;
+
+  --popover: #101a2e;
+  --popover-foreground: #e8f0fe;
+
+  --primary: #38bdf8;
+  --primary-foreground: #04121f;
+
+  --secondary: #1a2740;
+  --secondary-foreground: #e8f0fe;
+
+  --muted: #1a2740;
+  --muted-foreground: #9db4d4;
+
+  --accent: #1e3a5f;
+  --accent-foreground: #e8f0fe;
+
+  --destructive: #f87171;
+  --destructive-foreground: #04121f;
+
+  --border: #1e3050;
+  --input: #1e3050;
+  --ring: #38bdf8;
+
+  --easy: #34d399;
+  --medium: #fbbf24;
+  --hard: #f87171;
+
+  --editor-bg: #0d1626;
+  --editor-line: #16233b;
+
+  --scrollbar-thumb: #24395c;
+  --scrollbar-thumb-hover: #33507d;
+  --selection-bg: rgba(56, 189, 248, 0.3);
 }
 
 /* ============================================================
-   TAILWIND THEME EXTENSIONS
+   TAILWIND BRIDGE
    ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -118,22 +174,27 @@
 }
 
 /* ============================================================
-   BASE STYLES
+   BASE
    ============================================================ */
 * {
   border-color: var(--border);
 }
 
+html {
+  /* Set from settings; falls back to the Geist stack. */
+  font-size: var(--ui-font-size, 16px);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--ui-font-family, var(--font-sans)), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ============================================================
-   SCROLLBAR STYLES
+   SCROLLBARS — theme-driven, previously hardcoded greys
    ============================================================ */
 ::-webkit-scrollbar {
   width: 8px;
@@ -145,31 +206,24 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: var(--scrollbar-thumb-hover);
 }
 
-.light ::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
+* {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-.light ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
-}
-
-/* ============================================================
-   SELECTION
-   ============================================================ */
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
+  background: var(--selection-bg);
 }
 
 /* ============================================================
-   UTILITY ANIMATIONS
+   ANIMATIONS
    ============================================================ */
 @keyframes fade-in {
   from {
@@ -199,9 +253,16 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
+    color-mix(in srgb, var(--foreground) 6%, transparent) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-shimmer {
+    animation: none;
+  }
 }

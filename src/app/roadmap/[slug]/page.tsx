@@ -14,8 +14,9 @@ import Link from "next/link"
 import { curriculum, getStepProblemCount } from "@/lib/data/curriculum"
 import { getDifficultyBg, formatProblemNumber } from "@/lib/utils"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/auth/user-menu"
+import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
+import { useSettingsStore } from "@/lib/settings/store"
 
 const container = {
   hidden: { opacity: 0 },
@@ -43,6 +44,12 @@ export default function StepPage({
 
   const { getProblemStatus, toggleSolved } = useProgressStore()
 
+  // Settings → Curriculum → Default difficulty filter. Applied after hydration so
+  // the server and the client render the same list on first paint.
+  const difficultyFilter = useSettingsStore((st) => st.settings.curriculum.difficultyFilter)
+  const setDifficultyFilter = useSettingsStore((st) => st.update)
+  const activeFilter = hydrated ? difficultyFilter : "ALL"
+
   if (!step) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -57,6 +64,14 @@ export default function StepPage({
   }
 
   const problemCount = getStepProblemCount(step.stepNumber)
+
+  const matchesFilter = (difficulty: string) =>
+    activeFilter === "ALL" || difficulty === activeFilter
+
+  const visibleCount = step.topics.reduce(
+    (n, topic) => n + topic.problems.filter((pr) => matchesFilter(pr.difficulty)).length,
+    0,
+  )
 
   return (
     <div className="min-h-screen">
@@ -107,11 +122,31 @@ export default function StepPage({
             {step.description}
           </p>
           <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1" suppressHydrationWarning>
               <Code2 className="h-4 w-4" />
-              {problemCount} problems
+              {activeFilter === "ALL"
+                ? `${problemCount} problems`
+                : `${visibleCount} of ${problemCount} problems`}
             </span>
             <span>{step.topics.length} topics</span>
+          </div>
+
+          {/* Persisted in settings, so the choice carries between steps and sessions. */}
+          <div className="mt-4 flex flex-wrap items-center gap-1.5">
+            {(["ALL", "EASY", "MEDIUM", "HARD"] as const).map((level) => (
+              <button
+                key={level}
+                onClick={() => setDifficultyFilter({ curriculum: { difficultyFilter: level } })}
+                suppressHydrationWarning
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  activeFilter === level
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {level === "ALL" ? "All" : level[0] + level.slice(1).toLowerCase()}
+              </button>
+            ))}
           </div>
         </motion.div>
 
@@ -122,7 +157,34 @@ export default function StepPage({
           animate="show"
           className="space-y-8"
         >
-          {step.topics.map((topic, topicIndex) => (
+          {/* A filter carried in from another step can match nothing here. Saying so
+              beats an empty page with no explanation. */}
+          {visibleCount === 0 && (
+            <motion.div
+              variants={item}
+              className="rounded-2xl border border-dashed border-border bg-secondary/20 p-8 text-center"
+            >
+              <p className="mb-1 text-sm font-semibold" suppressHydrationWarning>
+                No {activeFilter.toLowerCase()} problems in this step
+              </p>
+              <p className="mb-4 text-xs text-muted-foreground">
+                The difficulty filter carries over between steps. This one has{" "}
+                {problemCount} problems, none of them{" "}
+                <span suppressHydrationWarning>{activeFilter.toLowerCase()}</span>.
+              </p>
+              <button
+                onClick={() => setDifficultyFilter({ curriculum: { difficultyFilter: "ALL" } })}
+                className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Show all problems
+              </button>
+            </motion.div>
+          )}
+
+          {step.topics.map((topic, topicIndex) => {
+            const shown = topic.problems.filter((pr) => matchesFilter(pr.difficulty))
+            if (shown.length === 0) return null
+            return (
             <motion.div key={topic.slug} variants={item}>
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 {/* Topic Header */}
@@ -134,15 +196,15 @@ export default function StepPage({
                       </div>
                       <h2 className="text-lg font-semibold">{topic.title}</h2>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {topic.problems.length} problems
+                    <span className="text-sm text-muted-foreground" suppressHydrationWarning>
+                      {shown.length} problems
                     </span>
                   </div>
                 </div>
 
                 {/* Problems Table */}
                 <div className="divide-y divide-border">
-                  {topic.problems.map((problem) => (
+                  {shown.map((problem) => (
                     <Link
                       key={problem.slug}
                       href={`/problem/${problem.slug}`}
@@ -205,7 +267,8 @@ export default function StepPage({
                 </div>
               </div>
             </motion.div>
-          ))}
+            )
+          })}
         </motion.div>
 
         {/* Navigation */}

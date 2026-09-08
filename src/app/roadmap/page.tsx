@@ -6,15 +6,15 @@ import {
   BookOpen,
   Code2,
   ArrowLeft,
-  CheckCircle2,
-  Circle,
-  Lock,
+  Coffee,
 } from "lucide-react"
 import Link from "next/link"
 import { curriculum, getStepProblemCount, getTotalProblemCount } from "@/lib/data/curriculum"
 import { useProgressStore } from "@/lib/progress/store"
-import { UserMenu } from "@/components/auth/user-menu"
+import { UserMenu } from "@/components/layout/user-menu"
 import { useHydrated } from "@/lib/hooks/use-hydrated"
+import { StreakStrip } from "@/components/progress/streak-strip"
+import { ProblemSearch } from "@/components/search/problem-search"
 
 const container = {
   hidden: { opacity: 0 },
@@ -92,24 +92,52 @@ export default function RoadmapPage() {
         </motion.div>
 
         {/* Overall Stats */}
+        {/* Streak, activity calendar and completion, derived from the activity log. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-12 grid grid-cols-3 gap-4"
+          className="mb-12"
         >
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-primary">18</div>
-            <div className="text-sm text-muted-foreground">Steps</div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-primary" suppressHydrationWarning>{solvedCount}/{totalProblems}</div>
-            <div className="text-sm text-muted-foreground">Solved</div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <div className="text-2xl font-bold text-easy" suppressHydrationWarning>{completionPercentage}%</div>
-            <div className="text-sm text-muted-foreground">Completed</div>
-          </div>
+          <StreakStrip totalProblems={totalProblems} />
+        </motion.div>
+
+        {/* Search across every problem, plus a jump to the next unsolved one. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <ProblemSearch />
+        </motion.div>
+
+        {/* The Java track sits before the problems for anyone still learning the
+            language rather than the algorithms. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <Link
+            href="/learn/java"
+            className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/50"
+          >
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <Coffee className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Java Syntax Track</h2>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Enough Java to write the solutions — overflow, collections, boxing traps, recursion
+                depth. Every snippet runs.
+              </p>
+            </div>
+          </Link>
         </motion.div>
 
         {/* Steps List */}

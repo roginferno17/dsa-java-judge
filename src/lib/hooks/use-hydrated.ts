@@ -1,17 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
+
+const emptySubscribe = () => () => {}
 
 /**
- * Hook to check if component has mounted and hydrated on client.
- * Prevents React hydration mismatch when reading client-only state (localStorage / Zustand persist).
+ * True once the client has hydrated.
+ *
+ * useSyncExternalStore gives this directly from its server/client snapshot pair,
+ * which avoids the setState-inside-an-effect pattern that triggers a cascading
+ * re-render (and a React lint error).
  */
 export function useHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
-
-  return hydrated
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true, // client
+    () => false // server
+  )
 }
